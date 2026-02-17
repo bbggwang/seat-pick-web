@@ -141,3 +141,15 @@
   display: flex; justify-content: center; align-items: center; 
   font-weight: bold; color: #999; background-color: #f9f9f9; font-size: 12px;
 }
+
+/* 꾹 누를 때 쫀득하게 작아지는 모션 */
+.seat {
+  transition: transform 0.1s ease-out; /* 평소엔 빠르게 복구 */
+}
+
+.seat.pressing {
+  transform: scale(0.75); /* 버튼 크기가 75%로 줄어듦 */
+  opacity: 0.8; /* 약간 투명해짐 */
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); /* 0.5초 동안 천천히 쪼그라듦 */
+  border: 2px solid #ff4d4d; /* 테두리가 빨갛게 변함 (선택사항) */
+}
