@@ -123,24 +123,33 @@ function App() {
     const currentData = (perfName !== "선택" && roundName !== "선택") ? db[perfName][roundName] : null;
     const cfg = currentData ? SEAT_CONFIGS[currentData.type] : null;
 
+    // [수정] 꾹 누르기 팝업 추가 & X 상태 클릭 무시 로직 적용
     const processSeatAction = (idx, isBlockAction) => {
       if (!currentData) return;
       const newStatus = [...currentData.status];
+      const currentSeatStatus = newStatus[idx];
+
       if (isBlockAction) {
         // [X모드] 꾹 눌렀을 때
-        if (newStatus[idx] === 2) {
+        if (currentSeatStatus === 2) {
+          // 이미 X인 경우 -> 해제할지 물어봄
           if (window.confirm("좌석을 다시 활성화하시겠습니까?")) newStatus[idx] = 0;
           else return;
-        } else { newStatus[idx] = 2; }
+        } else { 
+          // [수정] X로 만들 때도 팝업 띄움
+          if (window.confirm("이 좌석을 '판매 불가(X)'로 지정하시겠습니까?")) newStatus[idx] = 2;
+          else return;
+        }
       } else {
-        // [일반모드] 그냥 클릭했을 때
-        const st = newStatus[idx];
-        if (st === 0) {
+        // [일반모드] 짧게 클릭했을 때
+        if (currentSeatStatus === 0) {
              if(window.confirm("이 좌석을 예약하시겠습니까?")) newStatus[idx] = 1; else return;
         }
-        else if (st === 1) { if (window.confirm("좌석을 취소하시겠습니까?")) newStatus[idx] = 0; else return; }
-        else if (st === 2) { 
-            alert("이 좌석은 판매 불가(X) 상태입니다. 해제하려면 꾹 눌러주세요."); 
+        else if (currentSeatStatus === 1) { 
+             if (window.confirm("좌석을 취소하시겠습니까?")) newStatus[idx] = 0; else return; 
+        }
+        else if (currentSeatStatus === 2) { 
+            // [수정] X 상태에서는 클릭해도 아무 반응 없음 (팝업 X)
             return; 
         }
       }
@@ -215,56 +224,46 @@ function App() {
   }
 }
 
-// [수정 완료] 스크롤 시 팝업 뜨는 문제 완벽 해결 버전
+// [유지] 스크롤 및 터치 충돌 방지 로직이 포함된 안전한 버튼
 const SeatButton = ({ status, label, style, onClick, onLongPress }) => {
   const [isPressing, setIsPressing] = useState(false);
   const timerRef = useRef(null);
-  const isLongPressTriggered = useRef(false); // 꾹 누르기가 실행됐는지 체크
+  const ignoreClick = useRef(false);
 
-  // 눌렀을 때 (타이머 시작)
   const startPress = () => { 
-      setIsPressing(true); // 작아지는 모션
-      isLongPressTriggered.current = false; 
+      setIsPressing(true); 
+      ignoreClick.current = false;
       timerRef.current = setTimeout(() => { 
-          isLongPressTriggered.current = true; // 꾹 누르기 상태로 변경
-          onLongPress(); // X표시 기능 실행
-          setIsPressing(false); // 모션 복구
+          onLongPress(); // 꾹 누르기 실행
+          ignoreClick.current = true; // 이후 클릭 무시하도록 깃발 세움
+          setIsPressing(false); 
       }, 500); 
   };
 
-  // 손 뗐을 때 (타이머 취소)
   const endPress = () => { 
       if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; } 
       setIsPressing(false); 
   };
 
-  // [핵심] 브라우저가 '클릭'이라고 인정한 경우에만 팝업 실행
-  // (스크롤 하다가 떼면 브라우저가 알아서 onClick을 실행 안 함)
-  const handleClick = () => {
-      // 만약 방금 꾹 누르기가 실행됐다면, 클릭(팝업)은 무시
-      if (isLongPressTriggered.current) {
-          isLongPressTriggered.current = false;
+  const handleClick = (e) => {
+      // 깃발이 세워져 있다면(꾹 누르기 실행됨) -> 팝업 무시
+      if (ignoreClick.current) {
+          ignoreClick.current = false;
           return;
       }
-      onClick(); // 짧은 터치일 때만 팝업 띄움
+      onClick(); // 아니면 정상 팝업
   };
 
   return ( 
       <button 
-          className={`seat state-${status} no-select ${isPressing ? 'pressing' : ''}`} 
+          className={`seat state-${status} no-select ${isPressing ? 'pressing' : ''}`}
           style={style} 
-          // 터치/클릭 시작 감지
           onMouseDown={startPress} 
           onTouchStart={startPress}
-          
-          // 터치/클릭 끝남 감지 (모션 및 타이머 취소용)
           onMouseUp={endPress} 
           onMouseLeave={endPress}
           onTouchEnd={endPress} 
-          
-          // [중요] 실제 팝업 로직은 여기로 이동 (스크롤 간섭 해결)
           onClick={handleClick}
-          
           onContextMenu={(e) => e.preventDefault()} 
       > 
           {label} 
