@@ -72,10 +72,18 @@ function App() {
     
       const newDb = { ...db };
       
-      // [추가] 중복 등록 방지 안내 문구
+      // [강력 수정] 1차 확인 후 2차 확인까지 진행하는 철벽 로직
       if (newDb[name] && newDb[name][round]) {
-        if (!window.confirm(`이미 [${name}]의 [${round}] 데이터가 존재합니다.\n덮어쓸까요?`)) {
-          return; // '취소' 누르면 여기서 중단!
+        // 1차 경고
+        const firstCheck = window.confirm(`이미 [${name}]의 [${round}] 데이터가 존재합니다.\n덮어쓸까요?`);
+        
+        if (firstCheck) {
+          // 2차 경고 (정말? 한 번 더!)
+          const secondCheck = window.confirm("정말? 좌석이 모두 초기화되어 복구할 수 없습니다.");
+          
+          if (!secondCheck) return; // 2차에서 취소하면 중단
+        } else {
+          return; // 1차에서 취소하면 중단
         }
       }
     
