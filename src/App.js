@@ -5,13 +5,13 @@ import { getDatabase, ref, onValue, set } from "firebase/database";
 
 // --- [여기에 아까 복사한 firebaseConfig를 붙여넣으세요] ---
 const firebaseConfig = {
-  apiKey: "아이피에이키...",
-  authDomain: "프로젝트아이디.firebaseapp.com",
-  databaseURL: "https://프로젝트아이디.firebaseio.com",
-  projectId: "프로젝트아이디",
-  storageBucket: "프로젝트아이디.appspot.com",
-  messagingSenderId: "...",
-  appId: "..."
+  apiKey: "AIzaSyDt8KRr2irhsbW5UxeOOpIQ-ntdMpE1vDM",
+  authDomain: "seat-pick-web.firebaseapp.com",
+  databaseURL: "https://seat-pick-web-default-rtdb.firebaseio.com",
+  projectId: "seat-pick-web",
+  storageBucket: "seat-pick-web.firebasestorage.app",
+  messagingSenderId: "595580864478",
+  appId: "1:595580864478:web:2c09a790b768e3d9383f4f"
 };
 // -----------------------------------------------------
 
