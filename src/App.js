@@ -69,7 +69,16 @@ function App() {
       const round = e.target.round.value;
       const type = e.target.type.value;
       if (!name) return alert("이름을 입력하세요!");
+    
       const newDb = { ...db };
+      
+      // [추가] 중복 등록 방지 안내 문구
+      if (newDb[name] && newDb[name][round]) {
+        if (!window.confirm(`이미 [${name}]의 [${round}] 데이터가 존재합니다.\n덮어쓸까요?`)) {
+          return; // '취소' 누르면 여기서 중단!
+        }
+      }
+    
       if (!newDb[name]) newDb[name] = {};
       const cfg = SEAT_CONFIGS[type];
       newDb[name][round] = { type: type, status: Array(cfg.rows.length * cfg.cols).fill(0) };
@@ -137,13 +146,13 @@ function App() {
           else return;
         } else { 
           // [수정] X로 만들 때도 팝업 띄움
-          if (window.confirm("이 좌석을 '판매 불가(X)'로 지정하시겠습니까?")) newStatus[idx] = 2;
+          if (window.confirm("이 좌석을 [선택불가]로 지정하시겠습니까?")) newStatus[idx] = 2;
           else return;
         }
       } else {
         // [일반모드] 짧게 클릭했을 때
         if (currentSeatStatus === 0) {
-             if(window.confirm("이 좌석을 예약하시겠습니까?")) newStatus[idx] = 1; else return;
+             if(window.confirm("이 좌석을 선택하시겠습니까?")) newStatus[idx] = 1; else return;
         }
         else if (currentSeatStatus === 1) { 
              if (window.confirm("좌석을 취소하시겠습니까?")) newStatus[idx] = 0; else return; 
@@ -162,11 +171,11 @@ function App() {
         <header className="control-bar">
           <div className="left-controls">
             <select value={perfName} onChange={e => { handleSelectPerf(e.target.value); e.target.blur(); }}>
-              <option>선택</option>
+              <option>공연 선택</option>
               {perfList.map(p => <option key={p} value={p}>{p}</option>)}
             </select>
             <select value={roundName} onChange={e => { setRoundName(e.target.value); e.target.blur(); }}>
-              <option>선택</option>
+              <option>회차 선택</option>
               {roundList.map(r => <option key={r} value={r}>{r}</option>)}
             </select>
           </div>
