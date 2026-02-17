@@ -1,38 +1,143 @@
-.App {
+/* 전체 앱 스타일 */
+.app-container {
+  width: 100%;
+  max-width: 1200px;
+  min-width: 375px; 
+  margin: 0 auto;
+  padding: 60px;
+  font-family: "Malgun Gothic", sans-serif;
   text-align: center;
-}
-
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
+  background-color: #f8f9fa;
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  box-sizing: border-box;
 }
 
-.App-link {
-  color: #61dafb;
+.no-select {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+/* 메인 메뉴 */
+.main-menu { display: flex; flex-direction: column; justify-content: center; height: 80vh; }
+.title { font-size: clamp(2rem, 5vw, 3rem); margin-bottom: 40px; }
+
+/* [수정 4] Lite 글자 크기 축소 */
+.lite { 
+  color: #FF9800; 
+  font-size: 0.5em; /* 제목 크기의 절반 */
+  vertical-align: middle;
+  margin-left: 5px;
+}
+
+.button-group { display: flex; flex-direction: column; gap: 20px; align-items: center; width: 100%; }
+
+.big-btn {
+  width: 100%; max-width: 320px;
+  height: 60px; font-size: 18px; 
+  border: 1px solid #ccc; border-radius: 8px; cursor: pointer;
+  background-color: white; 
+  color: #333;
+  transition: background-color 0.2s;
+}
+.big-btn:hover { background-color: #f1f3f5; }
+
+
+/* 등록 화면 */
+.register-screen { 
+  display: flex; flex-direction: column; align-items: center; 
+  margin-top: 0; 
+}
+
+.register-form { 
+  background: white; 
+  padding: 30px 40px 60px 40px; 
+  border-radius: 10px; border: 1px solid #ddd; 
+  width: 100%; max-width: 500px; 
+  display: flex; flex-direction: column; gap: 20px; /* 간격도 살짝 줄임 */
+}
+
+.input-group { text-align: left; display: flex; flex-direction: column; }
+.input-group label { margin-bottom: 5px; font-weight: bold; font-size: 16px; }
+
+/* [수정 1] 입력창 세로 두께 축소 (패딩 14px -> 8px) */
+.input-group input, .input-group select { 
+  width: 100%; 
+  padding: 8px 12px; /* 여기가 핵심! 얇아짐 */
+  font-size: 16px; 
+  border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; 
+  height: 42px; /* 높이 강제 지정으로 일정하게 */
+}
+
+.btn-row { display: flex; gap: 15px; margin-top: 10px; justify-content: center; }
+
+
+/* 컨트롤 바 */
+.control-bar { 
+  display: flex; flex-wrap: wrap; gap: 15px; 
+  margin-bottom: 30px; justify-content: center; align-items: center;
+}
+@media (min-width: 768px) { .control-bar { justify-content: space-between; } }
+
+.left-controls { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.right-controls { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+
+.left-controls select { padding: 8px 12px; font-size: 15px; border-radius: 4px; border: 1px solid #ccc; cursor: pointer; }
+
+.action-btn {
+  width: auto; padding: 8px 20px; font-size: 15px; font-weight: bold; 
+  cursor: pointer; border-radius: 4px; border: 1px solid #ccc; 
+  background-color: white; color: #333; white-space: nowrap;
+}
+.action-btn.delete { color: #e03131; border-color: #ffa8a8; }
+.action-btn:hover { background-color: #f8f9fa; }
+.action-btn.delete:hover { background-color: #fff5f5; }
+
+
+/* [수정 3] 무대 글자 1.5배 키우기 (18px -> 30px) */
+.stage-label {
+  background-color: #eee; 
+  padding: 30px 0; 
+  font-size: 30px; /* 대폭 키움 */
+  font-weight: bold; 
+  border-radius: 8px; 
+  margin: 20px 0; 
+  border: 1px solid #ccc;
+  letter-spacing: 10px; /* 자간도 시원하게 */
+}
+
+.entrance-label {
+  background-color: #eee; padding: 15px; font-size: 18px; 
+  font-weight: bold; border-radius: 8px; margin: 20px 0; border: 1px solid #ccc;
+  clear: both; position: relative; z-index: 10;
+}
+
+/* 현황판 */
+.status-bar { 
+  background-color: transparent; border: none; 
+  color: #555; padding: 10px; 
+  text-align: center; font-weight: bold; font-size: 16px; margin-top: 5px;
+}
+
+/* 좌석 그리드 */
+.seat-area { width: 100%; display: flex; justify-content: center; margin: 30px 0; }
+.grid-wrapper { display: grid; gap: 6px; width: 100%; }
+
+.seat {
+  width: 100%; aspect-ratio: 1/1; padding: 0; 
+  font-size: clamp(10px, 2.5vw, 16px); font-weight: bold; 
+  border: 1px solid #bbb; border-radius: 6px; cursor: pointer; 
+  display: flex; justify-content: center; align-items: center; touch-action: manipulation;
+  min-width: 28px; min-height: 28px;
+}
+
+.state-0 { background-color: white; color: black; }
+.state-1 { background-color: #546E7A; color: white; border: none; }
+.state-2 { background-color: #DEE2E6; color: #ADB5BD; border: none; font-size: clamp(12px, 3vw, 20px); }
+
+.aisle {
+  display: flex; justify-content: center; align-items: center; 
+  font-weight: bold; color: #999; background-color: #f9f9f9; font-size: 12px;
 }
