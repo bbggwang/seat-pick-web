@@ -1,18 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 import { initializeApp } from "firebase/app";
 import { getDatabase, ref, onValue, set } from "firebase/database";
 
-// -----------------------------------------------------
-// [주의] 아까 메모해둔 Firebase 설정값을 여기에 다시 붙여넣어주세요!
+// --- [여기에 아까 복사한 firebaseConfig를 붙여넣으세요] ---
 const firebaseConfig = {
-  apiKey: "AIzaSyDt8KRr2irhsbW5UxeOOpIQ-ntdMpE1vDM",
-  authDomain: "seat-pick-web.firebaseapp.com",
-  databaseURL: "https://seat-pick-web-default-rtdb.firebaseio.com",
-  projectId: "seat-pick-web",
-  storageBucket: "seat-pick-web.firebasestorage.app",
-  messagingSenderId: "595580864478",
-  appId: "1:595580864478:web:2c09a790b768e3d9383f4f"
+  apiKey: "아이피에이키...",
+  authDomain: "프로젝트아이디.firebaseapp.com",
+  databaseURL: "https://프로젝트아이디.firebaseio.com",
+  projectId: "프로젝트아이디",
+  storageBucket: "프로젝트아이디.appspot.com",
+  messagingSenderId: "...",
+  appId: "..."
 };
 // -----------------------------------------------------
 
@@ -32,7 +31,6 @@ function App() {
   const [perfName, setPerfName] = useState("선택");
   const [roundName, setRoundName] = useState("선택");
 
-  // 실시간 데이터 불러오기
   useEffect(() => {
     const dbRef = ref(database, 'performances');
     onValue(dbRef, (snapshot) => {
@@ -42,19 +40,12 @@ function App() {
   }, []);
 
   const saveData = (newDb) => {
-// 이제 내 기기가 아니라 서버(Firebase)에 저장합니다.
     set(ref(database, 'performances'), newDb);
   };
 
-  const handleSelectPerf = (e) => {
-    setPerfName(e.target.value);
+  const handleSelectPerf = (val) => {
+    setPerfName(val);
     setRoundName("선택");
-    e.target.blur(); // [수정] 선택 후 포커스 해제 (드롭박스 버그 해결)
-  };
-
-  const handleSelectRound = (e) => {
-    setRoundName(e.target.value);
-    e.target.blur(); // [수정] 선택 후 포커스 해제
   };
 
   if (menu === "main") {
@@ -92,10 +83,10 @@ function App() {
         <h2>[ 신규 공연 등록 ]</h2>
         <form onSubmit={handleRegister} className="register-form">
           <div className="input-group">
-            <label>기존 공연 불러오기:</label>
+            <label>기존 공연 불러오기 (선택):</label>
             <select onChange={(e) => {
                 document.getElementById("perf-name-input").value = e.target.value;
-                e.target.blur(); 
+                e.target.blur();
             }}>
               <option value="">-- 목록에서 선택 --</option>
               {Object.keys(db).sort().map(n => <option key={n} value={n}>{n}</option>)}
@@ -132,62 +123,58 @@ function App() {
     const currentData = (perfName !== "선택" && roundName !== "선택") ? db[perfName][roundName] : null;
     const cfg = currentData ? SEAT_CONFIGS[currentData.type] : null;
 
-    // [핵심 수정] 클릭 시 무조건 팝업 띄우기 로직
-    const processSeatAction = (idx) => {
+    const processSeatAction = (idx, isBlockAction) => {
       if (!currentData) return;
       const newStatus = [...currentData.status];
-      const currentSeatStatus = newStatus[idx];
-      
-      let message = "";
-      let nextStatus = 0;
-
-      if (currentSeatStatus === 0) {
-          message = "이 좌석을 '예약 완료' 하시겠습니까?";
-          nextStatus = 1;
-      } else if (currentSeatStatus === 1) {
-          message = "예약을 '취소' 하시겠습니까?";
-          nextStatus = 0;
-      } else if (currentSeatStatus === 2) {
-          message = "이 좌석을 다시 '판매 가능'하게 바꾸시겠습니까?";
-          nextStatus = 0;
+      if (isBlockAction) {
+        // [X모드] 꾹 눌렀을 때
+        if (newStatus[idx] === 2) {
+          if (window.confirm("좌석을 다시 활성화하시겠습니까?")) newStatus[idx] = 0;
+          else return;
+        } else { newStatus[idx] = 2; }
+      } else {
+        // [일반모드] 그냥 클릭했을 때
+        const st = newStatus[idx];
+        if (st === 0) {
+             if(window.confirm("이 좌석을 예약하시겠습니까?")) newStatus[idx] = 1; else return;
+        }
+        else if (st === 1) { if (window.confirm("좌석을 취소하시겠습니까?")) newStatus[idx] = 0; else return; }
+        else if (st === 2) { 
+            alert("이 좌석은 판매 불가(X) 상태입니다. 해제하려면 꾹 눌러주세요."); 
+            return; 
+        }
       }
-
-      // 확인 팝업 (취소 누르면 아무 일도 안 일어남)
-      if (window.confirm(message)) {
-          newStatus[idx] = nextStatus;
-          const newDb = { ...db };
-          newDb[perfName][roundName].status = newStatus;
-          saveData(newDb);
-      }
+      const newDb = { ...db }; newDb[perfName][roundName].status = newStatus;
+      saveData(newDb);
     };
 
     return (
       <div className="app-container booking-screen">
         <header className="control-bar">
           <div className="left-controls">
-            <select value={perfName} onChange={handleSelectPerf}>
+            <select value={perfName} onChange={e => { handleSelectPerf(e.target.value); e.target.blur(); }}>
               <option>선택</option>
               {perfList.map(p => <option key={p} value={p}>{p}</option>)}
             </select>
-            <select value={roundName} onChange={handleSelectRound}>
+            <select value={roundName} onChange={e => { setRoundName(e.target.value); e.target.blur(); }}>
               <option>선택</option>
               {roundList.map(r => <option key={r} value={r}>{r}</option>)}
             </select>
           </div>
           <div className="right-controls">
             <button className="action-btn reset" onClick={() => {
-              if (currentData && window.confirm("정말 모든 좌석을 초기화하시겠습니까?")) {
+              if (currentData && window.confirm("모두 비우시겠습니까?")) {
                 const newDb = { ...db }; newDb[perfName][roundName].status.fill(0);
                 saveData(newDb);
               }
-            }}>초기화</button>
+            }}>좌석 초기화</button>
             <button className="action-btn delete" onClick={() => {
-              if (currentData && window.confirm("이 회차를 완전히 삭제하시겠습니까?")) {
+              if (currentData && window.confirm("회차를 삭제하시겠습니까?")) {
                 const newDb = { ...db }; delete newDb[perfName][roundName];
                 if (Object.keys(newDb[perfName]).length === 0) delete newDb[perfName];
                 saveData(newDb); setPerfName("선택"); setRoundName("선택");
               }
-            }}>회차삭제</button>
+            }}>회차 삭제</button>
             <button className="action-btn back" onClick={() => setMenu("main")}>메인으로</button>
           </div>
         </header>
@@ -203,13 +190,13 @@ function App() {
                   const status = currentData.status[realIdx];
                   const colPos = cIdx + 1 + (cIdx >= (cfg.cols - cfg.split) ? 1 : 0);
                   return (
-                    <SeatButton
-                      key={realIdx}
-                      status={status}
-                      label={status === 1 ? "완료" : (status === 2 ? "X" : `${rowLabel}${seatNum}`)}
-                      style={{ gridRow: rIdx + 1, gridColumn: colPos }}
-                      onClick={() => processSeatAction(realIdx)} // 짧게 누르면: 기존 팝업
-                      onLongPress={() => processSeatAction(realIdx, 'long')} // 꾹 누르면: X표시 (액션 구분)
+                    <SeatButton 
+                      key={realIdx} 
+                      status={status} 
+                      label={status === 1 ? "완료" : (status === 2 ? "X" : `${rowLabel}${seatNum}`)} 
+                      style={{ gridRow: rIdx + 1, gridColumn: colPos }} 
+                      onClick={() => processSeatAction(realIdx, false)} 
+                      onLongPress={() => processSeatAction(realIdx, true)} 
                     />
                   );
                 })
@@ -220,101 +207,69 @@ function App() {
         <div className="entrance-label">[ 출 입 구 ]</div>
         {currentData && (
           <div className="status-bar">
-            총 {currentData.status.length}석 | 완료 {currentData.status.filter(s=>s===1).length}석 | 잔여 {currentData.status.filter(s=>s===0).length}석
+            총 {currentData.status.length}석 | 완료 {currentData.status.filter(s=>s===1).length}석 | 불가 {currentData.status.filter(s=>s===2).length}석 | 잔여 {currentData.status.filter(s=>s===0).length}석
           </div>
         )}
       </div>
     );
   }
 }
-// 꾹 누르기(Long Press)와 모션을 처리하는 전용 버튼 부품
+
+// [수정 완료] 스크롤 시 팝업 뜨는 문제 완벽 해결 버전
 const SeatButton = ({ status, label, style, onClick, onLongPress }) => {
   const [isPressing, setIsPressing] = useState(false);
-  const timerRef = React.useRef(null); // 타이머 저장소
-  const isLongPressed = React.useRef(false); // 꾹 눌렀는지 체크
+  const timerRef = useRef(null);
+  const isLongPressTriggered = useRef(false); // 꾹 누르기가 실행됐는지 체크
 
-  // 누르기 시작 (마우스/터치 공통)
-  const startPress = () => {
-    setIsPressing(true); // CSS 애니메이션 시작 (작아짐)
-    isLongPressed.current = false;
-    
-    // 0.5초 뒤에 '꾹 누르기'로 인정
-    timerRef.current = setTimeout(() => {
-      isLongPressed.current = true;
-      if (onLongPress) onLongPress(); // 롱프레스 동작 실행
-      setIsPressing(false); // 애니메이션 끝
-    }, 500); 
+  // 눌렀을 때 (타이머 시작)
+  const startPress = () => { 
+      setIsPressing(true); // 작아지는 모션
+      isLongPressTriggered.current = false; 
+      timerRef.current = setTimeout(() => { 
+          isLongPressTriggered.current = true; // 꾹 누르기 상태로 변경
+          onLongPress(); // X표시 기능 실행
+          setIsPressing(false); // 모션 복구
+      }, 500); 
   };
 
-  // 손 뗌 (마우스/터치 공통)
-  const endPress = () => {
-    clearTimeout(timerRef.current); // 타이머 취소
-    setIsPressing(false); // 애니메이션 복구
-    
-    // 꾹 누른 게 아니었으면 '일반 클릭'으로 처리
-    if (!isLongPressed.current && onClick) {
-      onClick();
-    }
+  // 손 뗐을 때 (타이머 취소)
+  const endPress = () => { 
+      if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; } 
+      setIsPressing(false); 
   };
 
-  return (
-    <button
-      className={`seat state-${status} no-select ${isPressing ? 'pressing' : ''}`}
-      style={style}
-      onMouseDown={startPress}
-      onMouseUp={endPress}
-      onMouseLeave={endPress}
-      onTouchStart={startPress}
-      onTouchEnd={(e) => {
-        // 모바일 스크롤 방지 및 터치 종료 처리
-        // e.preventDefault(); // 스크롤이 필요하면 이 줄은 지우세요
-        endPress();
-      }}
-    >
-      {label}
-    </button>
+  // [핵심] 브라우저가 '클릭'이라고 인정한 경우에만 팝업 실행
+  // (스크롤 하다가 떼면 브라우저가 알아서 onClick을 실행 안 함)
+  const handleClick = () => {
+      // 만약 방금 꾹 누르기가 실행됐다면, 클릭(팝업)은 무시
+      if (isLongPressTriggered.current) {
+          isLongPressTriggered.current = false;
+          return;
+      }
+      onClick(); // 짧은 터치일 때만 팝업 띄움
+  };
+
+  return ( 
+      <button 
+          className={`seat state-${status} no-select ${isPressing ? 'pressing' : ''}`} 
+          style={style} 
+          // 터치/클릭 시작 감지
+          onMouseDown={startPress} 
+          onTouchStart={startPress}
+          
+          // 터치/클릭 끝남 감지 (모션 및 타이머 취소용)
+          onMouseUp={endPress} 
+          onMouseLeave={endPress}
+          onTouchEnd={endPress} 
+          
+          // [중요] 실제 팝업 로직은 여기로 이동 (스크롤 간섭 해결)
+          onClick={handleClick}
+          
+          onContextMenu={(e) => e.preventDefault()} 
+      > 
+          {label} 
+      </button> 
   );
 };
-// App 컴포넌트 안의 processSeatAction 함수 수정
-const processSeatAction = (idx, actionType) => {
-  if (!currentData) return;
-  const newStatus = [...currentData.status];
-  const currentSeatStatus = newStatus[idx];
 
-  // 1. 꾹 눌렀을 때 (X 표시 토글)
-  if (actionType === 'long') {
-      if (window.confirm("이 좌석을 '판매 불가(X)'로 지정하시겠습니까?")) {
-         // 이미 X면 풀고, 아니면 X로
-         newStatus[idx] = (currentSeatStatus === 2) ? 0 : 2; 
-      }
-  } 
-  // 2. 그냥 짧게 클릭했을 때 (기존 팝업 로직)
-  else {
-      let message = "";
-      let nextStatus = 0;
-      
-      if (currentSeatStatus === 0) {
-          message = "이 좌석을 '예약 완료' 하시겠습니까?";
-          nextStatus = 1;
-      } else if (currentSeatStatus === 1) {
-          message = "예약을 '취소' 하시겠습니까?";
-          nextStatus = 0;
-      } else if (currentSeatStatus === 2) {
-          // X표시된 걸 클릭하면 안내만
-          return alert("꾹 눌러서 X 표시를 해제하세요!"); 
-      }
-      
-      if (window.confirm(message)) {
-          newStatus[idx] = nextStatus;
-      } else {
-          return; // 취소하면 저장 안 함
-      }
-  }
-
-  // 변경사항 저장
-  const newDb = { ...db };
-  newDb[perfName][roundName].status = newStatus;
-  saveData(newDb);
-};
 export default App;
-
