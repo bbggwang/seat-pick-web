@@ -20,7 +20,7 @@ const database = getDatabase(app);
 
 const SEAT_CONFIGS = {
   "40석(1줄 5석)": { rows: ["가", "나", "다", "라"], cols: 10, split: 5 },
-  "48석(1줄 6석) ": { rows: ["가", "나", "다", "라"], cols: 12, split: 6 },
+  "48석(1줄 6석)": { rows: ["가", "나", "다", "라"], cols: 12, split: 6 },
   "56석(1줄 7석)": { rows: ["가", "나", "다", "라"], cols: 14, split: 7 },
   "60석(1줄 6석+보조석추가)": { rows: ["보조", "가", "나", "다", "라"], cols: 12, split: 6 },
 };
@@ -110,7 +110,7 @@ function App() {
             </select>
           </div>
           <div className="input-group">
-            <label>신규 공연 제목:</label>
+            <label>신규 등록:</label>
             <input id="perf-name-input" name="name" placeholder="공연명 입력" />
           </div>
           <div className="input-group">
@@ -121,7 +121,7 @@ function App() {
           </div>
           <div className="input-group">
             <label>좌석 타입:</label>
-            <select name="type" defaultValue="48석">
+            <select name="type" defaultValue="48석(1줄 6석)">
               {Object.keys(SEAT_CONFIGS).map(t => <option key={t} value={t}>{t}</option>)}
             </select>
           </div>
