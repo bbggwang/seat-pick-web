@@ -252,50 +252,62 @@ function App() {
   }
 }
 
-// [유지] 스크롤 및 터치 충돌 방지 로직이 포함된 안전한 버튼
+// [수정 완료] 꾹 눌렀을 때 뒷북 클릭(팝업)을 완벽하게 차단하는 버전
 const SeatButton = ({ status, label, style, onClick, onLongPress }) => {
   const [isPressing, setIsPressing] = useState(false);
   const timerRef = useRef(null);
-  const ignoreClick = useRef(false);
+  const isLongPressActive = useRef(false); // 꾹 누르기가 실행됐는지 기록
 
-  const startPress = () => { 
-      setIsPressing(true); 
-      ignoreClick.current = false;
-      timerRef.current = setTimeout(() => { 
-          onLongPress(); // 꾹 누르기 실행
-          ignoreClick.current = true; // 이후 클릭 무시하도록 깃발 세움
-          setIsPressing(false); 
-      }, 500); 
+  const startPress = (e) => {
+    setIsPressing(true);
+    isLongPressActive.current = false; // 시작할 땐 항상 거짓
+
+    timerRef.current = setTimeout(() => {
+      isLongPressActive.current = true; // 0.5초 지나면 "꾹 누르기 성공" 기록
+      onLongPress();
+      setIsPressing(false);
+    }, 500);
   };
 
-  const endPress = () => { 
-      if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; } 
-      setIsPressing(false); 
+  const endPress = (e) => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    setIsPressing(false);
+    
+    // [핵심] 꾹 누르기가 이미 실행됐다면, 브라우저의 기본 클릭 이벤트를 강제로 막음
+    if (isLongPressActive.current && e.cancelable) {
+      e.preventDefault(); 
+    }
   };
 
   const handleClick = (e) => {
-      // 깃발이 세워져 있다면(꾹 누르기 실행됨) -> 팝업 무시
-      if (ignoreClick.current) {
-          ignoreClick.current = false;
-          return;
-      }
-      onClick(); // 아니면 정상 팝업
+    // 꾹 누르기 기록이 있다면 클릭 함수(팝업)를 실행하지 않고 조용히 종료
+    if (isLongPressActive.current) {
+      isLongPressActive.current = false; // 기록 초기화
+      return;
+    }
+    onClick(); // 짧게 눌렀을 때만 팝업 실행
   };
 
-  return ( 
-      <button 
-          className={`seat state-${status} no-select ${isPressing ? 'pressing' : ''}`}
-          style={style} 
-          onMouseDown={startPress} 
-          onTouchStart={startPress}
-          onMouseUp={endPress} 
-          onMouseLeave={endPress}
-          onTouchEnd={endPress} 
-          onClick={handleClick}
-          onContextMenu={(e) => e.preventDefault()} 
-      > 
-          {label} 
-      </button> 
+  return (
+    <button
+      className={`seat state-${status} no-select ${isPressing ? 'pressing' : ''}`}
+      style={style}
+      // 누르기 시작
+      onMouseDown={startPress}
+      onTouchStart={startPress}
+      // 떼기 (여기서 유령 클릭의 싹을 자릅니다)
+      onMouseUp={endPress}
+      onMouseLeave={endPress}
+      onTouchEnd={endPress}
+      // 실제 로직 실행
+      onClick={handleClick}
+      onContextMenu={(e) => e.preventDefault()}
+    >
+      {label}
+    </button>
   );
 };
 
