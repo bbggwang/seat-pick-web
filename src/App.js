@@ -19,10 +19,10 @@ const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
 const SEAT_CONFIGS = {
-  "40석": { rows: ["가", "나", "다", "라"], cols: 10, split: 5 },
-  "48석": { rows: ["가", "나", "다", "라"], cols: 12, split: 6 },
-  "56석": { rows: ["가", "나", "다", "라"], cols: 14, split: 7 },
-  "60석": { rows: ["보조", "가", "나", "다", "라"], cols: 12, split: 6 },
+  "40석(1줄 5석)": { rows: ["가", "나", "다", "라"], cols: 10, split: 5 },
+  "48석(1줄 6석) ": { rows: ["가", "나", "다", "라"], cols: 12, split: 6 },
+  "56석(1줄 7석)": { rows: ["가", "나", "다", "라"], cols: 14, split: 7 },
+  "60석(1줄 6석+보조석추가)": { rows: ["보조", "가", "나", "다", "라"], cols: 12, split: 6 },
 };
 
 function App() {
@@ -56,7 +56,7 @@ function App() {
           <button className="big-btn" onClick={() => setMenu("register")}>공연 등록하기</button>
           <button className="big-btn" onClick={() => {
             setPerfName("선택"); setRoundName("선택"); setMenu("booking");
-          }}>좌석 관리 / 지난 공연</button>
+          }}>좌석 관리</button>
         </div>
       </div>
     );
@@ -100,7 +100,7 @@ function App() {
         <h2>[ 신규 공연 등록 ]</h2>
         <form onSubmit={handleRegister} className="register-form">
           <div className="input-group">
-            <label>기존 공연 불러오기 (선택):</label>
+            <label>등록된 공연 목록 (선택):</label>
             <select onChange={(e) => {
                 document.getElementById("perf-name-input").value = e.target.value;
                 e.target.blur();
@@ -110,7 +110,7 @@ function App() {
             </select>
           </div>
           <div className="input-group">
-            <label>공연 이름:</label>
+            <label>신규 공연 제목:</label>
             <input id="perf-name-input" name="name" placeholder="공연명 입력" />
           </div>
           <div className="input-group">
