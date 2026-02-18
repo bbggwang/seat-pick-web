@@ -186,15 +186,30 @@
   .seat-area { width: 100%; display: flex; justify-content: center; margin: 30px 0; }
   .grid-wrapper { display: grid; gap: 6px; width: 100%; }
   
-  /* 좌석 버튼 스타일 */
+  /* 좌석 버튼 스타일 (세로 정렬 추가) */
   .seat {
     width: 100%; aspect-ratio: 1/1; padding: 0; 
     font-size: clamp(10px, 2.5vw, 16px); font-weight: bold; 
     border: 1px solid #bbb; border-radius: 6px; cursor: pointer; 
-    display: flex; justify-content: center; align-items: center; 
+    
+    /* [핵심] 글자를 위아래로 배치하기 위해 설정 */
+    display: flex; 
+    flex-direction: column; /* 세로로 쌓기 */
+    justify-content: center; 
+    align-items: center; 
+    
     touch-action: manipulation;
     min-width: 28px; min-height: 28px;
-    transition: transform 0.1s ease-out; /* 모션용 */
+    transition: transform 0.1s ease-out;
+    line-height: 1.1; /* 줄 간격 좁게 */
+  }
+
+  /* [추가] 원래 좌석 이름 (아주 작은 글씨) */
+  .seat-sub-label {
+    font-size: 0.6em; /* 본래 글자 크기의 60% */
+    font-weight: normal;
+    opacity: 0.7;     /* 살짝 흐릿하게 */
+    margin-top: 2px;  /* 윗글자와 간격 */
   }
   
   /* 좌석 상태별 색상 */
@@ -212,3 +227,50 @@
     display: flex; justify-content: center; align-items: center; 
     font-weight: bold; color: #999; background-color: #f9f9f9; font-size: 12px;
   }
+
+  /* =========================================
+   [추가] 모바일 전용: 한 화면에 다 구겨 넣기 (Fit to Screen)
+   ========================================= */
+@media (max-width: 768px) {
+  
+  /* 1. 핸드폰에선 전체 여백을 확 줄여서 공간 확보 */
+  .app-container {
+    padding: 10px; /* 60px -> 10px로 축소 */
+    min-width: 320px; /* 최소폭 조정 */
+  }
+
+  /* 2. 좌석 사이 간격 좁히기 */
+  .grid-wrapper {
+    gap: 3px; /* 6px -> 3px로 촘촘하게 */
+    width: 100%; /* 화면 꽉 채우기 */
+  }
+
+  /* 3. 좌석 버튼 강제 다이어트 */
+  .seat {
+    min-width: 0; /* "나 작아져도 돼!" 허락 */
+    width: 100%;  /* 칸에 맞춰서 늘어나거나 줄어듦 */
+    padding: 0;   /* 내부 여백 제거 */
+    font-size: 10px; /* 글씨 크기도 작게 */
+    aspect-ratio: 1/1; /* 정사각형 비율 유지 */
+  }
+  
+  /* 4. 통로 글자도 작게 */
+  .aisle {
+    font-size: 10px;
+  }
+  
+  /* 5. 컨트롤바 버튼들도 모바일엔 꽉 차게 */
+  .control-bar {
+    justify-content: center;
+  }
+  
+  .left-controls, .right-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .left-controls select {
+    width: 48%; /* 반반씩 차지 */
+    min-width: 0;
+  }
+}

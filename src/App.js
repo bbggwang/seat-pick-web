@@ -226,11 +226,21 @@ function App() {
                   const realIdx = (rIdx * cfg.cols) + cIdx;
                   const status = currentData.status[realIdx];
                   const colPos = cIdx + 1 + (cIdx >= (cfg.cols - cfg.split) ? 1 : 0);
+                  
+                  // [변수 생성] 원래 좌석 이름 (예: 가12)
+                  const originalName = `${rowLabel}${seatNum}`;
+
                   return (
                     <SeatButton 
                       key={realIdx} 
                       status={status} 
-                      label={status === 1 ? "완료" : (status === 2 ? "X" : `${rowLabel}${seatNum}`)} 
+                      
+                      // 1. 화면에 크게 보일 글자 (완료 / X / 가12)
+                      label={status === 1 ? "완료" : (status === 2 ? "X" : originalName)} 
+                      
+                      // 2. [추가] 밑에 작게 보일 원래 이름 (항상 가12)
+                      originalLabel={originalName}
+                      
                       style={{ gridRow: rIdx + 1, gridColumn: colPos }} 
                       onClick={() => processSeatAction(realIdx, false)} 
                       onLongPress={() => processSeatAction(realIdx, true)} 
