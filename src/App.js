@@ -305,18 +305,16 @@ const SeatButton = ({ status, label, style, onClick, onLongPress }) => {
     <button
       className={`seat state-${status} no-select ${isPressing ? 'pressing' : ''}`}
       style={style}
-      // 누르기 시작
-      onMouseDown={startPress}
-      onTouchStart={startPress}
-      // 떼기 (여기서 유령 클릭의 싹을 자릅니다)
-      onMouseUp={endPress}
-      onMouseLeave={endPress}
-      onTouchEnd={endPress}
-      // 실제 로직 실행
+      onMouseDown={startPress} onTouchStart={startPress}
+      onMouseUp={endPress} onMouseLeave={endPress} onTouchEnd={endPress}
       onClick={handleClick}
       onContextMenu={(e) => e.preventDefault()}
     >
-      {label}
+      {/* 1. 메인 글자 (완료, X, 가12) */}
+      <div>{label}</div>
+      
+      {/* 2. [사장님 코드에 빠져있던 부분] 상태가 0이 아닐 때 원래 이름 표시 */}
+      {status !== 0 && <div className="seat-sub-label">{originalLabel}</div>}
     </button>
   );
 };
