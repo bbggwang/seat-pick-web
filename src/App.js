@@ -145,29 +145,31 @@ function App() {
       if (!currentData) return;
       const newStatus = [...currentData.status];
       const currentSeatStatus = newStatus[idx];
-
+    
+      // [핵심 추가] 좌석 이름 계산 (예: 가12)
+      const rIdx = Math.floor(idx / cfg.cols);
+      const cIdx = idx % cfg.cols;
+      const seatName = `${cfg.rows[rIdx]}${cfg.cols - cIdx}`;
+    
       if (isBlockAction) {
         // [X모드] 꾹 눌렀을 때
         if (currentSeatStatus === 2) {
-          // 이미 X인 경우 -> 해제할지 물어봄
-          if (window.confirm("좌석을 다시 활성화하시겠습니까?")) newStatus[idx] = 0;
+          if (window.confirm(`[${seatName}] 좌석을 다시 [활성화]하시겠습니까?`)) newStatus[idx] = 0;
           else return;
         } else { 
-          // [수정] X로 만들 때도 팝업 띄움
-          if (window.confirm("이 좌석을 [선택불가]로 지정하시겠습니까?")) newStatus[idx] = 2;
+          if (window.confirm(`[${seatName}] 좌석을 [선택불가]로 지정하시겠습니까?`)) newStatus[idx] = 2;
           else return;
         }
       } else {
         // [일반모드] 짧게 클릭했을 때
         if (currentSeatStatus === 0) {
-             if(window.confirm("이 좌석을 선택하시겠습니까?")) newStatus[idx] = 1; else return;
+          if (window.confirm(`[${seatName}] 좌석을 [선택]하시겠습니까?`)) newStatus[idx] = 1; else return;
         }
         else if (currentSeatStatus === 1) { 
-             if (window.confirm("좌석을 취소하시겠습니까?")) newStatus[idx] = 0; else return; 
+          if (window.confirm(`[${seatName}] 좌석을 [취소]하시겠습니까?`)) newStatus[idx] = 0; else return; 
         }
         else if (currentSeatStatus === 2) { 
-            // [수정] X 상태에서는 클릭해도 아무 반응 없음 (팝업 X)
-            return; 
+          return; // X 상태는 클릭 무시
         }
       }
       const newDb = { ...db }; newDb[perfName][roundName].status = newStatus;
