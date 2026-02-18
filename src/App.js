@@ -178,15 +178,26 @@ function App() {
       <div className="app-container booking-screen">
         <header className="control-bar">
           <div className="left-controls">
-            <select value={perfName} onChange={e => { handleSelectPerf(e.target.value); e.target.blur(); }}>
-              <option>공연 선택</option>
-              {perfList.map(p => <option key={p} value={p}>{p}</option>)}
-            </select>
-            <select value={roundName} onChange={e => { setRoundName(e.target.value); e.target.blur(); }}>
-              <option>회차 선택</option>
-              {roundList.map(r => <option key={r} value={r}>{r}</option>)}
-            </select>
-          </div>
+          {/* 공연 선택 드롭박스 */}
+          <select 
+            value={perfName} 
+            className={perfName === "공연 선택" || perfName === "선택" ? "not-selected" : "selected"}
+            onChange={e => { handleSelectPerf(e.target.value); e.target.blur(); }}
+          >
+            <option>공연 선택</option>
+            {perfList.map(p => <option key={p} value={p}>{p}</option>)}
+          </select>
+
+          {/* 회차 선택 드롭박스 */}
+          <select 
+            value={roundName} 
+            className={roundName === "회차 선택" || roundName === "선택" ? "not-selected" : "selected"}
+            onChange={e => { setRoundName(e.target.value); e.target.blur(); }}
+          >
+            <option>회차 선택</option>
+            {roundList.map(r => <option key={r} value={r}>{r}</option>)}
+          </select>
+        </div>
           <div className="right-controls">
             <button className="action-btn reset" onClick={() => {
               if (currentData && window.confirm("모두 비우시겠습니까?")) {
