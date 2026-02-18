@@ -145,41 +145,57 @@ function App() {
   }
 
   if (menu === "booking") {
+    // [핵심] 변수 계산하기 전에 '문지기'가 먼저 검사해야 에러가 안 납니다!
+    // 1. 데이터가 아직 도착 안 했으면 "로딩중" 띄우고 여기서 멈춤 (변수 계산 X)
+    if (!db || Object.keys(db).length === 0) {
+      return (
+        <div className="app-container">
+          <h2 className="title" style={{marginTop: '20vh'}}>데이터를 불러오는 중...</h2>
+        </div>
+      );
+    }
+
+    // 2. 데이터는 왔는데, 수첩에 적힌 공연이 삭제됐거나 없으면? -> 메인으로 안전하게 이동
+    if (perfName !== "선택" && (!db[perfName] || (roundName !== "선택" && !db[perfName][roundName]))) {
+      setMenu("main");
+      setPerfName("선택");
+      setRoundName("선택");
+      return null; // 깜빡임 방지
+    }
+
+    // [여기서부터 변수 계산 시작] - 이제 데이터가 있는 게 확실하니 에러가 안 납니다.
     const perfList = Object.keys(db).reverse();
     const roundList = (perfName !== "선택" && db[perfName]) ? Object.keys(db[perfName]).sort() : [];
     const currentData = (perfName !== "선택" && roundName !== "선택") ? db[perfName][roundName] : null;
     const cfg = currentData ? SEAT_CONFIGS[currentData.type] : null;
 
-    // [수정] 꾹 누르기 팝업 추가 & X 상태 클릭 무시 로직 적용
     const processSeatAction = (idx, isBlockAction) => {
       if (!currentData) return;
       const newStatus = [...currentData.status];
       const currentSeatStatus = newStatus[idx];
-    
-      // [핵심 추가] 좌석 이름 계산 (예: 가12)
+
+      // 좌석 이름 계산
       const rIdx = Math.floor(idx / cfg.cols);
       const cIdx = idx % cfg.cols;
       const seatName = `${cfg.rows[rIdx]}${cfg.cols - cIdx}`;
-    
+
       if (isBlockAction) {
-        // [X모드] 꾹 눌렀을 때
         if (currentSeatStatus === 2) {
-          if (window.confirm(`[${seatName}] 좌석을 다시 [활성화]하시겠습니까?`)) newStatus[idx] = 0;
+          if (window.confirm(`[${seatName}] 좌석을 다시 활성화하시겠습니까?`)) newStatus[idx] = 0;
           else return;
         } else { 
-          if (window.confirm(`[${seatName}] 좌석을 [선택불가]로 지정하시겠습니까?`)) newStatus[idx] = 2;
+          if (window.confirm(`[${seatName}] 이 좌석을 [선택불가]로 지정하시겠습니까?`)) newStatus[idx] = 2;
           else return;
         }
       } else {
-        // [일반모드] 짧게 클릭했을 때
         if (currentSeatStatus === 0) {
-          if (window.confirm(`[${seatName}] 좌석을 [선택]하시겠습니까?`)) newStatus[idx] = 1; else return;
+             if(window.confirm(`[${seatName}] 이 좌석을 선택하시겠습니까?`)) newStatus[idx] = 1; else return;
         }
         else if (currentSeatStatus === 1) { 
-          if (window.confirm(`[${seatName}] 좌석을 [취소]하시겠습니까?`)) newStatus[idx] = 0; else return; 
+             if (window.confirm(`[${seatName}] 좌석을 취소하시겠습니까?`)) newStatus[idx] = 0; else return; 
         }
         else if (currentSeatStatus === 2) { 
-          return; // X 상태는 클릭 무시
+            return; 
         }
       }
       const newDb = { ...db }; newDb[perfName][roundName].status = newStatus;
@@ -190,7 +206,6 @@ function App() {
       <div className="app-container booking-screen">
         <header className="control-bar">
           <div className="left-controls">
-          {/* 공연 선택 드롭박스 */}
           <select 
             value={perfName} 
             className={perfName === "공연 선택" || perfName === "선택" ? "not-selected" : "selected"}
@@ -200,7 +215,6 @@ function App() {
             {perfList.map(p => <option key={p} value={p}>{p}</option>)}
           </select>
 
-          {/* 회차 선택 드롭박스 */}
           <select 
             value={roundName} 
             className={roundName === "회차 선택" || roundName === "선택" ? "not-selected" : "selected"}
@@ -239,20 +253,14 @@ function App() {
                   const status = currentData.status[realIdx];
                   const colPos = cIdx + 1 + (cIdx >= (cfg.cols - cfg.split) ? 1 : 0);
                   
-                  // [변수 생성] 원래 좌석 이름 (예: 가12)
                   const originalName = `${rowLabel}${seatNum}`;
 
                   return (
                     <SeatButton 
                       key={realIdx} 
                       status={status} 
-                      
-                      // 1. 화면에 크게 보일 글자 (완료 / X / 가12)
                       label={status === 1 ? "완료" : (status === 2 ? "X" : originalName)} 
-                      
-                      // 2. [추가] 밑에 작게 보일 원래 이름 (항상 가12)
-                      originalLabel={originalName}
-                      
+                      originalLabel={originalName} 
                       style={{ gridRow: rIdx + 1, gridColumn: colPos }} 
                       onClick={() => processSeatAction(realIdx, false)} 
                       onLongPress={() => processSeatAction(realIdx, true)} 
