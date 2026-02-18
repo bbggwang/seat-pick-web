@@ -263,7 +263,7 @@ function App() {
 }
 
 // [수정 완료] 꾹 눌렀을 때 뒷북 클릭(팝업)을 완벽하게 차단하는 버전
-const SeatButton = ({ status, label, style, onClick, onLongPress }) => {
+const SeatButton = ({ status, label, originalLabel, style, onClick, onLongPress }) => {
   const [isPressing, setIsPressing] = useState(false);
   const timerRef = useRef(null);
   const isLongPressActive = useRef(false); // 꾹 누르기가 실행됐는지 기록
