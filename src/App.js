@@ -26,10 +26,20 @@ const SEAT_CONFIGS = {
 };
 
 function App() {
+  // [수정 1] "혹시 수첩에 적어둔 거 있어?" 하고 확인하고 시작하기
   const [db, setDb] = useState({});
-  const [menu, setMenu] = useState("main");
-  const [perfName, setPerfName] = useState("선택");
-  const [roundName, setRoundName] = useState("선택");
+  
+  // 새로고침 해도 기억하도록 localStorage에서 먼저 찾아보고, 없으면 기본값 사용
+  const [menu, setMenu] = useState(() => localStorage.getItem("savedMenu") || "main");
+  const [perfName, setPerfName] = useState(() => localStorage.getItem("savedPerf") || "선택");
+  const [roundName, setRoundName] = useState(() => localStorage.getItem("savedRound") || "선택");
+
+  // [수정 2] 값이 바뀔 때마다 수첩(localStorage)에 받아 적기
+  useEffect(() => {
+    localStorage.setItem("savedMenu", menu);
+    localStorage.setItem("savedPerf", perfName);
+    localStorage.setItem("savedRound", roundName);
+  }, [menu, perfName, roundName]);
 
   useEffect(() => {
     const dbRef = ref(database, 'performances');
