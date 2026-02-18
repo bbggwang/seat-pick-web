@@ -150,10 +150,22 @@ function App() {
     if (!db || Object.keys(db).length === 0) {
       return (
         <div className="app-container">
-          <h2 className="title" style={{marginTop: '20vh'}}>데이터를 불러오는 중...</h2>
+          <div className="loading-box">데이터를 불러오는 중입니다...</div>
         </div>
       );
     }
+    // css 안쓰고 색상바꾸는 코드
+    // if (!db || Object.keys(db).length === 0) {
+    //   return (
+    //     <div className="app-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+    //       {/* 글씨 크기를 줄이고(18px), 색상을 부드러운 회색(#888)으로 조절했습니다 */}
+    //       <span style={{ fontSize: '18px', color: '#888', fontWeight: 'normal' }}>
+    //         데이터를 불러오는 중입니다...
+    //       </span>
+    //     </div>
+    //   );
+    // }
+
 
     // 2. 데이터는 왔는데, 수첩에 적힌 공연이 삭제됐거나 없으면? -> 메인으로 안전하게 이동
     if (perfName !== "선택" && (!db[perfName] || (roundName !== "선택" && !db[perfName][roundName]))) {

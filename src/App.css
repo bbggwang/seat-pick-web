@@ -274,3 +274,18 @@
     min-width: 0;
   }
 }
+
+.loading-box {
+  margin-top: 20vh;
+  font-size: 16px;
+  color: #999;
+  letter-spacing: -0.5px;
+  /* 살짝 깜빡이는 애니메이션 효과 (선택사항) */
+  animation: fade 1.5s infinite;
+}
+
+@keyframes fade {
+  0% { opacity: 0.4; }
+  50% { opacity: 1; }
+  100% { opacity: 0.4; }
+}
