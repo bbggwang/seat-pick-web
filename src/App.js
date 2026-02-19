@@ -196,12 +196,12 @@ function App() {
           if (window.confirm(`[${seatName}] 좌석을 다시 활성화하시겠습니까?`)) newStatus[idx] = 0;
           else return;
         } else { 
-          if (window.confirm(`[${seatName}] 이 좌석을 [선택불가]로 지정하시겠습니까?`)) newStatus[idx] = 2;
+          if (window.confirm(`[${seatName}] 좌석을 [선택불가]로 지정하시겠습니까?`)) newStatus[idx] = 2;
           else return;
         }
       } else {
         if (currentSeatStatus === 0) {
-             if(window.confirm(`[${seatName}] 이 좌석을 선택하시겠습니까?`)) newStatus[idx] = 1; else return;
+             if(window.confirm(`[${seatName}] 좌석을 선택하시겠습니까?`)) newStatus[idx] = 1; else return;
         }
         else if (currentSeatStatus === 1) { 
              if (window.confirm(`[${seatName}] 좌석을 취소하시겠습니까?`)) newStatus[idx] = 0; else return; 
