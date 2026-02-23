@@ -26,6 +26,9 @@ const SEAT_CONFIGS = {
 };
 
 function App() {
+  // 🛡️ [추가] 롱프레스 시간을 기억할 전역 방패 (버튼이 지워져도 이 기억은 남습니다)
+  const lastLongPressTime = useRef(0);
+  
   // [수정 1] "혹시 수첩에 적어둔 거 있어?" 하고 확인하고 시작하기
   const [db, setDb] = useState({});
   
@@ -165,8 +168,8 @@ function App() {
     //     </div>
     //   );
     // }
-
-
+   
+    
     // 2. 데이터는 왔는데, 수첩에 적힌 공연이 삭제됐거나 없으면? -> 메인으로 안전하게 이동
     if (perfName !== "선택" && (!db[perfName] || (roundName !== "선택" && !db[perfName][roundName]))) {
       setMenu("main");
@@ -183,6 +186,15 @@ function App() {
 
     const processSeatAction = (idx, isBlockAction) => {
       if (!currentData) return;
+
+      // 🛡️ [시간 방패 추가] 롱프레스 시 시간 기록, 클릭 시 유령 클릭 차단
+      if (isBlockAction) {
+        lastLongPressTime.current = Date.now();
+      } else {
+        const timeSinceLongPress = Date.now() - lastLongPressTime.current;
+        if (timeSinceLongPress < 500) return; // 0.5초 내 뒷북 클릭 차단
+      }
+
       const newStatus = [...currentData.status];
       const currentSeatStatus = newStatus[idx];
 
@@ -294,18 +306,16 @@ function App() {
   }
 }
 
-// [수정 완료] 꾹 눌렀을 때 뒷북 클릭(팝업)을 완벽하게 차단하는 버전
 const SeatButton = ({ status, label, originalLabel, style, onClick, onLongPress }) => {
   const [isPressing, setIsPressing] = useState(false);
   const timerRef = useRef(null);
-  const isLongPressActive = useRef(false); // 꾹 누르기가 실행됐는지 기록
+  const isLongPressActive = useRef(false);
 
   const startPress = (e) => {
     setIsPressing(true);
-    isLongPressActive.current = false; // 시작할 땐 항상 거짓
-
+    isLongPressActive.current = false;
     timerRef.current = setTimeout(() => {
-      isLongPressActive.current = true; // 0.5초 지나면 "꾹 누르기 성공" 기록
+      isLongPressActive.current = true;
       onLongPress();
       setIsPressing(false);
     }, 500);
@@ -317,20 +327,17 @@ const SeatButton = ({ status, label, originalLabel, style, onClick, onLongPress 
       timerRef.current = null;
     }
     setIsPressing(false);
-    
-    // [핵심] 꾹 누르기가 이미 실행됐다면, 브라우저의 기본 클릭 이벤트를 강제로 막음
     if (isLongPressActive.current && e.cancelable) {
       e.preventDefault(); 
     }
   };
 
   const handleClick = (e) => {
-    // 꾹 누르기 기록이 있다면 클릭 함수(팝업)를 실행하지 않고 조용히 종료
     if (isLongPressActive.current) {
-      isLongPressActive.current = false; // 기록 초기화
+      isLongPressActive.current = false;
       return;
     }
-    onClick(); // 짧게 눌렀을 때만 팝업 실행
+    onClick();
   };
 
   return (
@@ -342,10 +349,7 @@ const SeatButton = ({ status, label, originalLabel, style, onClick, onLongPress 
       onClick={handleClick}
       onContextMenu={(e) => e.preventDefault()}
     >
-      {/* 1. 메인 글자 (완료, X, 가12) */}
       <div>{label}</div>
-      
-      {/* 2. [사장님 코드에 빠져있던 부분] 상태가 0이 아닐 때 원래 이름 표시 */}
       {status !== 0 && <div className="seat-sub-label">{originalLabel}</div>}
     </button>
   );
