@@ -26,10 +26,7 @@ const SEAT_CONFIGS = {
 };
 
 function App() {
-  // 🛡️ [추가] 롱프레스 시간을 기억할 전역 방패 (버튼이 지워져도 이 기억은 남습니다)
-  const lastLongPressTime = useRef(0);
-  
-  // [수정 1] "혹시 수첩에 적어둔 거 있어?" 하고 확인하고 시작하기
+  const lastActionTime = useRef(0);
   const [db, setDb] = useState({});
   
   // 새로고침 해도 기억하도록 localStorage에서 먼저 찾아보고, 없으면 기본값 사용
@@ -85,18 +82,15 @@ function App() {
     
       const newDb = { ...db };
       
-      // [강력 수정] 1차 확인 후 2차 확인까지 진행하는 철벽 로직
       if (newDb[name] && newDb[name][round]) {
-        // 1차 경고
         const firstCheck = window.confirm(`이미 [${name}]의 [${round}] 데이터가 존재합니다.\n덮어쓸까요?`);
         
         if (firstCheck) {
-          // 2차 경고 (정말? 한 번 더!)
           const secondCheck = window.confirm("정말? 좌석이 모두 초기화되어 복구할 수 없습니다.");
           
-          if (!secondCheck) return; // 2차에서 취소하면 중단
+          if (!secondCheck) return;
         } else {
-          return; // 1차에서 취소하면 중단
+          return;
         }
       }
     
@@ -168,8 +162,8 @@ function App() {
     //     </div>
     //   );
     // }
-   
-    
+
+
     // 2. 데이터는 왔는데, 수첩에 적힌 공연이 삭제됐거나 없으면? -> 메인으로 안전하게 이동
     if (perfName !== "선택" && (!db[perfName] || (roundName !== "선택" && !db[perfName][roundName]))) {
       setMenu("main");
@@ -186,13 +180,9 @@ function App() {
 
     const processSeatAction = (idx, isBlockAction) => {
       if (!currentData) return;
-
-      // 🛡️ [시간 방패 추가] 롱프레스 시 시간 기록, 클릭 시 유령 클릭 차단
-      if (isBlockAction) {
-        lastLongPressTime.current = Date.now();
-      } else {
-        const timeSinceLongPress = Date.now() - lastLongPressTime.current;
-        if (timeSinceLongPress < 500) return; // 0.5초 내 뒷북 클릭 차단
+      // 일반 클릭인데 방금 팝업 닫은 지 0.5초 안 지났으면 컷트!
+      if (!isBlockAction && (Date.now() - lastActionTime.current < 500)) {
+        return; 
       }
 
       const newStatus = [...currentData.status];
@@ -211,6 +201,9 @@ function App() {
           if (window.confirm(`[${seatName}] 좌석을 [선택불가]로 지정하시겠습니까?`)) newStatus[idx] = 2;
           else return;
         }
+        //꾹 누르기 팝업에서 '확인'을 누른 직후 시간 기록!
+        lastActionTime.current = Date.now();
+
       } else {
         if (currentSeatStatus === 0) {
              if(window.confirm(`[${seatName}] 좌석을 선택하시겠습니까?`)) newStatus[idx] = 1; else return;
@@ -221,6 +214,8 @@ function App() {
         else if (currentSeatStatus === 2) { 
             return; 
         }
+        //꾹 누르기 팝업에서 '확인'을 누른 직후 시간 기록!
+        lastActionTime.current = Date.now();
       }
       const newDb = { ...db }; newDb[perfName][roundName].status = newStatus;
       saveData(newDb);
@@ -306,16 +301,18 @@ function App() {
   }
 }
 
+// [수정 완료] 꾹 눌렀을 때 뒷북 클릭(팝업)을 완벽하게 차단하는 버전
 const SeatButton = ({ status, label, originalLabel, style, onClick, onLongPress }) => {
   const [isPressing, setIsPressing] = useState(false);
   const timerRef = useRef(null);
-  const isLongPressActive = useRef(false);
+  const isLongPressActive = useRef(false); // 꾹 누르기가 실행됐는지 기록
 
   const startPress = (e) => {
     setIsPressing(true);
-    isLongPressActive.current = false;
+    isLongPressActive.current = false; // 시작할 땐 항상 거짓
+
     timerRef.current = setTimeout(() => {
-      isLongPressActive.current = true;
+      isLongPressActive.current = true; // 0.5초 지나면 "꾹 누르기 성공" 기록
       onLongPress();
       setIsPressing(false);
     }, 500);
@@ -327,17 +324,20 @@ const SeatButton = ({ status, label, originalLabel, style, onClick, onLongPress 
       timerRef.current = null;
     }
     setIsPressing(false);
+    
+    // [핵심] 꾹 누르기가 이미 실행됐다면, 브라우저의 기본 클릭 이벤트를 강제로 막음
     if (isLongPressActive.current && e.cancelable) {
       e.preventDefault(); 
     }
   };
 
   const handleClick = (e) => {
+    // 꾹 누르기 기록이 있다면 클릭 함수(팝업)를 실행하지 않고 조용히 종료
     if (isLongPressActive.current) {
-      isLongPressActive.current = false;
+      isLongPressActive.current = false; // 기록 초기화
       return;
     }
-    onClick();
+    onClick(); // 짧게 눌렀을 때만 팝업 실행
   };
 
   return (
@@ -349,7 +349,10 @@ const SeatButton = ({ status, label, originalLabel, style, onClick, onLongPress 
       onClick={handleClick}
       onContextMenu={(e) => e.preventDefault()}
     >
+      {/* 1. 메인 글자 (완료, X, 가12) */}
       <div>{label}</div>
+      
+      {/* 2. [사장님 코드에 빠져있던 부분] 상태가 0이 아닐 때 원래 이름 표시 */}
       {status !== 0 && <div className="seat-sub-label">{originalLabel}</div>}
     </button>
   );
