@@ -126,7 +126,7 @@ function App() {
         rounds[`${i}회차`] = { type: defaultType, status: Array(cfg.rows.length * cfg.cols).fill(0) };
       }
 
-      // [핵심 변경] 생성 시간(createdAt)을 기록하여 나중에 최신순 정렬에 활용합니다!
+      // [유지] 생성 시간(createdAt) 기록
       set(ref(database, `performances/${name}`), { 
         adminPassword: pwd, 
         createdAt: Date.now(), 
@@ -169,12 +169,11 @@ function App() {
 
   // --- 3. 좌석 확인/관리 화면 ---
   if (menu === "booking") {
-    // [핵심 변경] 최신 등록 순서(createdAt 기준 내림차순)로 배열을 단단하게 정렬합니다.
+    // [완벽 수정] 가장 최근에 등록한 시간(createdAt)이 무조건 위로 오도록 강력하게 정렬
     const perfList = Object.keys(db).sort((a, b) => {
-      const timeA = db[a].createdAt || 0;
-      const timeB = db[b].createdAt || 0;
-      if (timeA !== timeB) return timeB - timeA; // 최신순
-      return b.localeCompare(a); // 예전 데이터는 이름 역순으로 백업 정렬
+      const timeA = db[a]?.createdAt || 0;
+      const timeB = db[b]?.createdAt || 0;
+      return timeB - timeA; 
     });
 
     const currentPerf = db[perfName];
@@ -422,17 +421,14 @@ function App() {
 const SeatButton = ({ status, label, originalLabel, style, onClick, onLongPress }) => {
   const [isPressing, setIsPressing] = useState(false);
   const timerRef = useRef(null);
-  
-  // [핵심 변경] 비활성화 팝업이 떴었는지를 기억하는 메모장
   const isLongPressTriggered = useRef(false);
   
   const handlePointerDown = (e) => {
     setIsPressing(true); 
-    isLongPressTriggered.current = false; // 터치할 때마다 초기화
+    isLongPressTriggered.current = false; 
     
-    // 민감도를 500에서 350으로 낮춰 가볍게 꾹 눌러도 반응하게 합니다.
     timerRef.current = setTimeout(() => { 
-      isLongPressTriggered.current = true; // 비활성화 발동!
+      isLongPressTriggered.current = true; 
       setIsPressing(false);
       onLongPress(); 
     }, 350); 
@@ -447,7 +443,6 @@ const SeatButton = ({ status, label, originalLabel, style, onClick, onLongPress 
   };
   
   const handleClick = (e) => { 
-    // [핵심 변경] 비활성화 팝업이 발동된 적이 있으면 일반 클릭(예약)은 무시하고 종료합니다.
     if (isLongPressTriggered.current) { 
       isLongPressTriggered.current = false; 
       return; 
@@ -461,7 +456,6 @@ const SeatButton = ({ status, label, originalLabel, style, onClick, onLongPress 
       type="button" 
       className={`seat state-${status} no-select ${isPressing ? 'pressing' : ''}`} 
       style={style}
-      // 마우스와 터치 이벤트를 onPointer 시리즈로 깔끔하게 통일했습니다.
       onPointerDown={handlePointerDown} 
       onPointerUp={handlePointerUp} 
       onPointerLeave={handlePointerUp} 

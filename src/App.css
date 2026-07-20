@@ -147,7 +147,7 @@ button {
   width: 100%; 
   max-width: 500px;
   margin: 0 auto;
-  box-sizing: border-box; /* 패딩이 전체 너비에 포함되도록 설정 */
+  box-sizing: border-box; 
 }
 
 .form-group {
@@ -200,8 +200,8 @@ button {
   -webkit-appearance: none !important;
   appearance: none !important;
   -webkit-text-fill-color: #333333 !important;
-  background-image: none !important; /* iOS 그라데이션 강제 제거 */
-  opacity: 1 !important; /* 투명도 강제 고정 */
+  background-image: none !important; 
+  opacity: 1 !important; 
 }
 
 .form-buttons button:hover {
@@ -374,20 +374,18 @@ button {
     min-width: 320px; 
   }
   
-  /* [추가] 모바일 기기 화면에 맞춘 등록 화면 박스 여백 조절 */
   .register-card {
     padding: 25px 15px; 
   }
   
-  /* [추가] 모바일에서는 저장/취소 버튼을 위아래로 쌓아 터치하기 편하게 변경 */
   .form-buttons {
     flex-direction: column;
     gap: 10px;
   }
   
   .form-buttons button {
-    width: 100%; /* 버튼이 좌우로 꽉 차도록 확장 */
-    padding: 15px 0; /* 세로 터치 영역 확장 */
+    width: 100%; 
+    padding: 15px 0; 
   }
 
   .grid-wrapper {
@@ -404,29 +402,56 @@ button {
   .aisle {
     font-size: 10px;
   }
+  
+  /* -----------------------------------------
+     [수정] 모바일 컨트롤 바 완벽 정렬 패치
+     ----------------------------------------- */
   .control-bar {
-    justify-content: center;
-  }
-/* [수정] 컨트롤 그룹 정렬 복구: stretch를 빼서 버튼들이 흉하게 늘어나지 않게 방어 */
-  .left-controls, .right-controls {
+    display: flex;
+    flex-direction: column; /* 전체를 위아래 두 줄로 나눔 */
     width: 100%;
-    flex-direction: column; 
-    align-items: center; /* 다시 center로 변경! 버튼 크기 원상복구 */
     gap: 15px; 
+    padding: 0;
   }
 
-  /* 드롭박스를 감싸는 뼈대만 가로폭 100% 확보 */
-  .control-column {
+  /* 1. 공연명 / 회차 드롭박스: 양쪽 끝 정렬 */
+  .left-controls {
+    display: flex;
+    flex-direction: row; 
+    justify-content: space-between; /* 양쪽 끝으로 밀어내기 */
     width: 100%;
-    width: clamp(280px, 90vw, 400px); /* 화면이 커도 너무 무식하게 넓어지지 않도록 최대 너비 제한 (선택사항) */
+    gap: 0; 
   }
 
-  /* 드롭박스 고정: 뼈대에 맞춰 100% 렌더링되므로 데이터가 없어도 쪼그라들지 않음 */
+  .control-column {
+    width: 48%; /* 각각 절반씩 차지하게 설정 */
+  }
+
   .left-controls select {
     width: 100%; 
-    height: 50px; 
-    font-size: 16px; 
-    padding: 0 15px; 
+    max-width: none; 
+    min-width: 0; 
+    height: 45px; 
+    font-size: 14px; 
+    padding: 0 10px; 
     box-sizing: border-box; 
+  }
+
+  /* 2. 하단 3개 버튼: 동일 간격 유지 */
+  .right-controls {
+    display: flex;
+    flex-direction: row; 
+    justify-content: space-between; 
+    width: 100%;
+    gap: 10px; 
+  }
+
+  .right-controls .action-btn {
+    flex: 1; /* 세 버튼이 1:1:1로 꽉 차게 공간을 나눠 가짐 */
+    padding: 12px 0; 
+    font-size: 14px; 
+    white-space: nowrap; 
+    text-align: center; 
+    margin: 0; 
   }
 }
