@@ -188,14 +188,20 @@ button {
 
 .form-buttons button {
   padding: 10px 30px;
-  background-color: #ffffff !important; /* 배경색 강제 지정 */
-  color: #333333 !important; /* 글자색 짙은 회색으로 강제 지정 */
-  border: 1px solid #999;
+  background-color: #ffffff !important; 
+  color: #333333 !important; 
+  border: 1px solid #999 !important;
   border-radius: 6px;
   font-size: 16px;
   font-weight: bold;
   transition: background-color 0.2s;
-  -webkit-text-fill-color: #333333 !important; /* iOS 환경 텍스트 색상 강제 유지 */
+  
+  /* [핵심 해결책] iOS가 강제로 넣는 스타일과 배경 이미지를 완벽히 차단 */
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  -webkit-text-fill-color: #333333 !important;
+  background-image: none !important; /* iOS 그라데이션 강제 제거 */
+  opacity: 1 !important; /* 투명도 강제 고정 */
 }
 
 .form-buttons button:hover {
