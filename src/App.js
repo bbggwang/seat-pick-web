@@ -126,7 +126,13 @@ function App() {
         rounds[`${i}회차`] = { type: defaultType, status: Array(cfg.rows.length * cfg.cols).fill(0) };
       }
 
-      set(ref(database, `performances/${name}`), { adminPassword: pwd, rounds });
+      // [핵심 변경] 생성 시간(createdAt)을 기록하여 나중에 최신순 정렬에 활용합니다!
+      set(ref(database, `performances/${name}`), { 
+        adminPassword: pwd, 
+        createdAt: Date.now(), 
+        rounds 
+      });
+      
       alert(`[${name}] 등록 완료!`);
       setMenu("main");
     };
@@ -163,15 +169,19 @@ function App() {
 
   // --- 3. 좌석 확인/관리 화면 ---
   if (menu === "booking") {
-    const perfList = Object.keys(db).reverse();
+    // [핵심 변경] 최신 등록 순서(createdAt 기준 내림차순)로 배열을 단단하게 정렬합니다.
+    const perfList = Object.keys(db).sort((a, b) => {
+      const timeA = db[a].createdAt || 0;
+      const timeB = db[b].createdAt || 0;
+      if (timeA !== timeB) return timeB - timeA; // 최신순
+      return b.localeCompare(a); // 예전 데이터는 이름 역순으로 백업 정렬
+    });
+
     const currentPerf = db[perfName];
     const roundList = currentPerf?.rounds ? Object.keys(currentPerf.rounds).sort() : [];
     const currentData = (currentPerf && roundName !== "선택") ? currentPerf.rounds[roundName] : null;
     
-    // [방어 코드 1] 좌석 설정 데이터가 꼬여도 터지지 않게 기본값 적용
     const cfg = currentData ? (SEAT_CONFIGS[currentData.type] || SEAT_CONFIGS["40석(1줄 5석)"]) : null;
-    
-    // [방어 코드 2] 파이어베이스에서 status 배열이 누락되어도 빈 배열을 만들어 앱 크래시 방지
     const safeStatus = (currentData && currentData.status) ? currentData.status : (cfg ? Array(cfg.rows.length * cfg.cols).fill(0) : []);
 
     const changeSeatType = (newType) => {
@@ -267,7 +277,6 @@ function App() {
       
       if (!isBlockAction && (Date.now() - lastActionTime.current < 500)) return; 
 
-      // [방어 코드 3] 상태 변경 시에도 안전한 배열을 복사하여 사용
       const newStatus = [...safeStatus];
       const currentSeatStatus = newStatus[idx] || 0;
       const rIdx = Math.floor(idx / cfg.cols);
@@ -319,7 +328,6 @@ function App() {
             <div className="control-column">
               <select value={roundName} onChange={e => setRoundName(e.target.value)}>
                 <option>회차 선택</option>
-                {/* [방어 코드 4] 괄호 안의 잔여 좌석 텍스트도 방어 처리 */}
                 {roundList.map(r => {
                   const rStatus = currentPerf.rounds[r]?.status || [];
                   return <option key={r} value={r}>{r} ({rStatus.length || 0}석)</option>;
@@ -373,7 +381,6 @@ function App() {
               {cfg.rows.map((rowLabel, rIdx) => (
                 [...Array(cfg.cols)].map((_, cIdx) => {
                   const realIdx = (rIdx * cfg.cols) + cIdx;
-                  // [방어 코드 5] 렌더링 시 안전한 상태(safeStatus) 사용
                   const isDone = safeStatus[realIdx] === 1;
                   const isBlocked = safeStatus[realIdx] === 2;
                   return (
@@ -396,7 +403,6 @@ function App() {
         {currentData && (
           <div className="bottom-info-area" style={{ marginTop: '20px' }}>
             <div className="status-bar">
-              {/* [방어 코드 6] 하단 요약 정보에도 안전한 상태(safeStatus) 사용 */}
               총 {safeStatus.length}석 | 완료 {safeStatus.filter(s=>s===1).length}석 | 불가 {safeStatus.filter(s=>s===2).length}석 | 잔여 {safeStatus.filter(s=>s===0).length}석
             </div>
             
@@ -412,31 +418,55 @@ function App() {
   }
 }
 
+// --- 4. 좌석(SeatButton) 컴포넌트 로직 전면 개선 ---
 const SeatButton = ({ status, label, originalLabel, style, onClick, onLongPress }) => {
   const [isPressing, setIsPressing] = useState(false);
   const timerRef = useRef(null);
-  const isLongPressActive = useRef(false);
   
-  const startPress = () => {
-    setIsPressing(true); isLongPressActive.current = false;
-    timerRef.current = setTimeout(() => { isLongPressActive.current = true; onLongPress(); setIsPressing(false); }, 500);
+  // [핵심 변경] 비활성화 팝업이 떴었는지를 기억하는 메모장
+  const isLongPressTriggered = useRef(false);
+  
+  const handlePointerDown = (e) => {
+    setIsPressing(true); 
+    isLongPressTriggered.current = false; // 터치할 때마다 초기화
+    
+    // 민감도를 500에서 350으로 낮춰 가볍게 꾹 눌러도 반응하게 합니다.
+    timerRef.current = setTimeout(() => { 
+      isLongPressTriggered.current = true; // 비활성화 발동!
+      setIsPressing(false);
+      onLongPress(); 
+    }, 350); 
   };
   
-  const endPress = (e) => {
-    if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
+  const handlePointerUp = () => {
     setIsPressing(false);
-    if (isLongPressActive.current && e.cancelable) e.preventDefault(); 
+    if (timerRef.current) { 
+      clearTimeout(timerRef.current); 
+      timerRef.current = null; 
+    }
   };
   
   const handleClick = (e) => { 
-    if (isLongPressActive.current) { isLongPressActive.current = false; return; } 
+    // [핵심 변경] 비활성화 팝업이 발동된 적이 있으면 일반 클릭(예약)은 무시하고 종료합니다.
+    if (isLongPressTriggered.current) { 
+      isLongPressTriggered.current = false; 
+      return; 
+    } 
     e.preventDefault();
     onClick(); 
   };
   
   return (
-    <button type="button" className={`seat state-${status} no-select ${isPressing ? 'pressing' : ''}`} style={style}
-      onMouseDown={startPress} onTouchStart={startPress} onMouseUp={endPress} onMouseLeave={endPress} onTouchEnd={endPress} onClick={handleClick}
+    <button 
+      type="button" 
+      className={`seat state-${status} no-select ${isPressing ? 'pressing' : ''}`} 
+      style={style}
+      // 마우스와 터치 이벤트를 onPointer 시리즈로 깔끔하게 통일했습니다.
+      onPointerDown={handlePointerDown} 
+      onPointerUp={handlePointerUp} 
+      onPointerLeave={handlePointerUp} 
+      onPointerCancel={handlePointerUp} 
+      onClick={handleClick}
       onContextMenu={(e) => e.preventDefault()}
     >
       <div>{label}</div>
