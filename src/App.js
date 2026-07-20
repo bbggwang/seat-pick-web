@@ -79,8 +79,6 @@ function App() {
   if (menu === "main") {
     return (
       <div className="app-container main-menu">
-        
-         {/* CSS로 깔끔하게 분리된 노티스 박스 */}
          <div className="notice-box">
           <div className="notice-title">📢 260721 업데이트 안내 (v2.0)</div>
           <ul className="notice-list">
@@ -88,25 +86,22 @@ function App() {
             <li>좌석관리 : 좌석선택 모드</li>
             <li>공연관리 : 공연명, 좌석수 등 수정 모드</li>
           </ul>
-          {/* [추가된 부분] notice-desc 클래스를 적용하여 작고 연하게 표시 */}
           <div className="notice-desc">불편사항 발생 시 황수연에게 알려주세요.</div>
         </div>
 
-        {/* CSS로 깔끔하게 분리된 타이틀 및 버전 */}
         <div className="title-wrapper">
           <h1 className="title">Seat Pick</h1>
           <span className="version-tag">ver.2.0</span>
         </div>
 
         <div className="button-group">
-          <button className="big-btn" onClick={() => setMenu("booking")}>
+          <button type="button" className="big-btn" onClick={() => setMenu("booking")}>
             좌석 현황 보기
           </button>
-          <button className="big-btn" onClick={() => setMenu("register")}>
+          <button type="button" className="big-btn" onClick={() => setMenu("register")}>
             신규 공연 등록
           </button>
         </div>
-
       </div>
     );
   }
@@ -172,7 +167,12 @@ function App() {
     const currentPerf = db[perfName];
     const roundList = currentPerf?.rounds ? Object.keys(currentPerf.rounds).sort() : [];
     const currentData = (currentPerf && roundName !== "선택") ? currentPerf.rounds[roundName] : null;
-    const cfg = currentData ? SEAT_CONFIGS[currentData.type] : null;
+    
+    // [방어 코드 1] 좌석 설정 데이터가 꼬여도 터지지 않게 기본값 적용
+    const cfg = currentData ? (SEAT_CONFIGS[currentData.type] || SEAT_CONFIGS["40석(1줄 5석)"]) : null;
+    
+    // [방어 코드 2] 파이어베이스에서 status 배열이 누락되어도 빈 배열을 만들어 앱 크래시 방지
+    const safeStatus = (currentData && currentData.status) ? currentData.status : (cfg ? Array(cfg.rows.length * cfg.cols).fill(0) : []);
 
     const changeSeatType = (newType) => {
       if (!window.confirm(`[${newType}]으로 변경 시 기존 데이터가 초기화됩니다.`)) return;
@@ -249,10 +249,10 @@ function App() {
 
       if (window.confirm(`새로운 회차인 [${newRoundName}]를 추가하시겠습니까?`)) {
         const defaultType = "40석(1줄 5석)";
-        const cfg = SEAT_CONFIGS[defaultType];
+        const newCfg = SEAT_CONFIGS[defaultType];
         set(ref(database, `performances/${perfName}/rounds/${newRoundName}`), {
           type: defaultType,
-          status: Array(cfg.rows.length * cfg.cols).fill(0)
+          status: Array(newCfg.rows.length * newCfg.cols).fill(0)
         });
         alert(`${newRoundName}가 추가되었습니다!`);
         setRoundName(newRoundName);
@@ -267,8 +267,9 @@ function App() {
       
       if (!isBlockAction && (Date.now() - lastActionTime.current < 500)) return; 
 
-      const newStatus = [...currentData.status];
-      const currentSeatStatus = newStatus[idx];
+      // [방어 코드 3] 상태 변경 시에도 안전한 배열을 복사하여 사용
+      const newStatus = [...safeStatus];
+      const currentSeatStatus = newStatus[idx] || 0;
       const rIdx = Math.floor(idx / cfg.cols);
       const cIdx = idx % cfg.cols;
       const seatName = `${cfg.rows[rIdx]}${cfg.cols - cIdx}`;
@@ -318,7 +319,11 @@ function App() {
             <div className="control-column">
               <select value={roundName} onChange={e => setRoundName(e.target.value)}>
                 <option>회차 선택</option>
-                {roundList.map(r => <option key={r} value={r}>{r} ({currentPerf?.rounds[r]?.status.length || 0}석)</option>)}
+                {/* [방어 코드 4] 괄호 안의 잔여 좌석 텍스트도 방어 처리 */}
+                {roundList.map(r => {
+                  const rStatus = currentPerf.rounds[r]?.status || [];
+                  return <option key={r} value={r}>{r} ({rStatus.length || 0}석)</option>;
+                })}
               </select>
               {adminMode === "perf" && perfName !== "선택" && (
                 <div className="sub-actions">
@@ -334,8 +339,8 @@ function App() {
           <div className="right-controls">
             {adminMode === "none" && currentPerf && (
               <>
-                <button className="action-btn save" onClick={() => handleAdminLogin("seat", currentPerf)}>🔒 좌석관리</button>
-                <button className="action-btn save" onClick={() => handleAdminLogin("perf", currentPerf)}>🔒 공연관리</button>
+                <button type="button" className="action-btn save" onClick={() => handleAdminLogin("seat", currentPerf)}>🔒 좌석관리</button>
+                <button type="button" className="action-btn save" onClick={() => handleAdminLogin("perf", currentPerf)}>🔒 공연관리</button>
               </>
             )}
 
@@ -350,10 +355,10 @@ function App() {
             )}
             
             {adminMode !== "none" && (
-              <button className="action-btn gray" onClick={() => setAdminMode("none")}>로그아웃</button>
+              <button type="button" className="action-btn gray" onClick={() => setAdminMode("none")}>로그아웃</button>
             )}
 
-            <button className="action-btn back" onClick={() => {
+            <button type="button" className="action-btn back" onClick={() => {
               setMenu("main");
               setAdminMode("none"); 
             }}>메인으로</button>
@@ -368,12 +373,18 @@ function App() {
               {cfg.rows.map((rowLabel, rIdx) => (
                 [...Array(cfg.cols)].map((_, cIdx) => {
                   const realIdx = (rIdx * cfg.cols) + cIdx;
+                  // [방어 코드 5] 렌더링 시 안전한 상태(safeStatus) 사용
+                  const isDone = safeStatus[realIdx] === 1;
+                  const isBlocked = safeStatus[realIdx] === 2;
                   return (
                     <SeatButton 
-                      key={realIdx} status={currentData.status[realIdx]} 
-                      label={currentData.status[realIdx] === 1 ? "완료" : (currentData.status[realIdx] === 2 ? "X" : `${rowLabel}${cfg.cols - cIdx}`)} 
-                      originalLabel={`${rowLabel}${cfg.cols - cIdx}`} style={{ gridRow: rIdx + 1, gridColumn: cIdx + 1 + (cIdx >= (cfg.cols - cfg.split) ? 1 : 0) }} 
-                      onClick={() => processSeatAction(realIdx, false)} onLongPress={() => processSeatAction(realIdx, true)} 
+                      key={realIdx} 
+                      status={safeStatus[realIdx] || 0} 
+                      label={isDone ? "완료" : (isBlocked ? "X" : `${rowLabel}${cfg.cols - cIdx}`)} 
+                      originalLabel={`${rowLabel}${cfg.cols - cIdx}`} 
+                      style={{ gridRow: rIdx + 1, gridColumn: cIdx + 1 + (cIdx >= (cfg.cols - cfg.split) ? 1 : 0) }} 
+                      onClick={() => processSeatAction(realIdx, false)} 
+                      onLongPress={() => processSeatAction(realIdx, true)} 
                     />
                   );
                 })
@@ -385,7 +396,8 @@ function App() {
         {currentData && (
           <div className="bottom-info-area" style={{ marginTop: '20px' }}>
             <div className="status-bar">
-              총 {currentData.status.length}석 | 완료 {currentData.status.filter(s=>s===1).length}석 | 불가 {currentData.status.filter(s=>s===2).length}석 | 잔여 {currentData.status.filter(s=>s===0).length}석
+              {/* [방어 코드 6] 하단 요약 정보에도 안전한 상태(safeStatus) 사용 */}
+              총 {safeStatus.length}석 | 완료 {safeStatus.filter(s=>s===1).length}석 | 불가 {safeStatus.filter(s=>s===2).length}석 | 잔여 {safeStatus.filter(s=>s===0).length}석
             </div>
             
             {adminMode === "perf" && (
@@ -416,13 +428,14 @@ const SeatButton = ({ status, label, originalLabel, style, onClick, onLongPress 
     if (isLongPressActive.current && e.cancelable) e.preventDefault(); 
   };
   
-  const handleClick = () => { 
+  const handleClick = (e) => { 
     if (isLongPressActive.current) { isLongPressActive.current = false; return; } 
+    e.preventDefault();
     onClick(); 
   };
   
   return (
-    <button className={`seat state-${status} no-select ${isPressing ? 'pressing' : ''}`} style={style}
+    <button type="button" className={`seat state-${status} no-select ${isPressing ? 'pressing' : ''}`} style={style}
       onMouseDown={startPress} onTouchStart={startPress} onMouseUp={endPress} onMouseLeave={endPress} onTouchEnd={endPress} onClick={handleClick}
       onContextMenu={(e) => e.preventDefault()}
     >

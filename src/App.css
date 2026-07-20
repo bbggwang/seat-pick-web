@@ -1,394 +1,421 @@
 /* =========================================
    1. 전체 레이아웃 및 공통 스타일
    ========================================= */
-   .app-container {
-    width: 100%;
-    max-width: 1200px;
-    min-width: 375px; 
-    margin: 0 auto;
-    padding: 60px;
-    font-family: "Malgun Gothic", sans-serif;
-    text-align: center;
-    background-color: #f8f9fa;
-    min-height: 100vh;
-    box-sizing: border-box;
-  }
-  
-  .no-select {
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-    -webkit-touch-callout: none;
-  }
-  
-  /* =========================================
-     2. 메인 메뉴 화면
-     ========================================= */
-  .main-menu { 
-    display: flex; 
-    flex-direction: column; 
-    justify-content: center; 
-    align-items: center; /* 자식 요소 가운데 정렬 추가 */
-    height: 80vh; 
-    margin-top: -60px; /* 화면 전체를 위로 살짝 끌어올림 */
-  }
-  
-  /* [신규] 공지사항 박스 */
-  .notice-box {
-    background-color: #f8f9fa;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 12px 15px;
-    margin: 0 auto 55px auto; /* 하단 마진을 35px로 늘려 타이틀과 확실히 떨어지게 함 */
-    max-width: 300px; /* 기존 320px에서 더 아담하게 축소 */
-    text-align: left;
-    font-size: 13.5px;
-    color: #333;
-    line-height: 1.5;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-  }
-  
-  .notice-title {
-    font-weight: bold; 
-    margin-bottom: 6px; 
-    font-size: 14.5px; 
-    color: #2c3e50;
-  }
-  
-  .notice-list {
-    margin: 0; 
-    padding-left: 18px; 
-    color: #555;
-  }
+/* [아이패드/모바일 호환성 패치] 애플 기기의 강제 스타일 무효화 */
+button, input, select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  border-radius: 4px; /* 기본 둥근 모서리 설정 */
+  margin: 0;
+  font-family: inherit;
+}
+button {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation; 
+  cursor: pointer;
+}
 
-  /* [수정] 공지 박스 내 일반 텍스트 설명용 스타일 (중앙 정렬 추가) */
-  .notice-desc {
-    font-size: 11.5px; 
-    color: #777;       
-    margin-top: 6px;   /* 위쪽과의 간격 살짝 조정 */
-    text-align: center; /* [핵심] 텍스트를 정중앙으로 정렬 */
+.app-container {
+  width: 100%;
+  max-width: 1200px;
+  min-width: 375px; 
+  margin: 0 auto;
+  padding: 60px;
+  font-family: "Malgun Gothic", sans-serif;
+  text-align: center;
+  background-color: #f8f9fa;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+.no-select {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* =========================================
+   2. 메인 메뉴 화면
+   ========================================= */
+.main-menu { 
+  display: flex; 
+  flex-direction: column; 
+  justify-content: center; 
+  align-items: center; 
+  height: 80vh; 
+  margin-top: -60px; 
+}
+
+.notice-box {
+  background-color: #f8f9fa;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 12px 15px;
+  margin: 0 auto 55px auto; 
+  max-width: 300px; 
+  text-align: left;
+  font-size: 13.5px;
+  color: #333;
+  line-height: 1.5;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.notice-title {
+  font-weight: bold; 
+  margin-bottom: 6px; 
+  font-size: 14.5px; 
+  color: #2c3e50;
+}
+
+.notice-list {
+  margin: 0; 
+  padding-left: 18px; 
+  color: #555;
+}
+
+.notice-desc {
+  font-size: 11.5px; 
+  color: #777;       
+  margin-top: 6px;   
+  text-align: center; 
+}
+
+.title-wrapper {
+  position: relative; 
+  display: inline-block; 
+  margin-bottom: 45px;
+}
+
+.title { 
+  font-size: clamp(2rem, 5vw, 3rem); 
+  margin: 0; 
+}
+
+.version-tag {
+  position: absolute; 
+  top: 12px; 
+  right: -80px; 
+  font-size: 20px; 
+  color: #888; 
+  font-weight: 500;
+}
+
+.button-group { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 15px; 
+  align-items: center; 
+  width: 100%; 
+  max-width: 300px;
+}
+
+.big-btn {
+  width: 100%; max-width: 320px;
+  height: 60px; font-size: 18px; 
+  border: 1px solid #ccc; border-radius: 8px; 
+  background-color: white; 
+  color: #333;
+  transition: background-color 0.2s;
+}
+
+.big-btn:hover { background-color: #f1f3f5; }
+
+
+/* =========================================
+   3. 등록 화면 (Register)
+   ========================================= */
+.register-screen {
+  background-color: #f8f9fa;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.page-title {
+  text-align: center;
+  margin-bottom: 30px;
+  font-size: 24px;
+}
+
+.register-card {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 40px 30px;
+  width: 100%; 
+  max-width: 500px;
+  margin: 0 auto;
+  box-sizing: border-box; /* 패딩이 전체 너비에 포함되도록 설정 */
+}
+
+.form-group {
+  margin-bottom: 25px;
+}
+
+.form-group label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 8px;
+  text-align: left;
+  font-size: 15px;
+}
+
+.form-group input, 
+.form-group select {
+  width: 100%;
+  height: 45px;
+  padding: 0 15px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+.form-hint {
+  font-size: 12px;
+  color: #888;
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.form-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.form-buttons button {
+  padding: 10px 30px;
+  background-color: #ffffff !important; /* 배경색 강제 지정 */
+  color: #333333 !important; /* 글자색 짙은 회색으로 강제 지정 */
+  border: 1px solid #999;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: bold;
+  transition: background-color 0.2s;
+  -webkit-text-fill-color: #333333 !important; /* iOS 환경 텍스트 색상 강제 유지 */
+}
+
+.form-buttons button:hover {
+  background-color: #f0f0f0;
+}
+
+
+/* =========================================
+   4. 상단 컨트롤 바 (Control Bar) & 기능 버튼
+   ========================================= */
+.control-bar { 
+  display: flex; flex-wrap: wrap; gap: 15px; 
+  margin-bottom: 30px; justify-content: center; align-items: flex-start;
+}
+
+@media (min-width: 768px) { 
+  .control-bar { justify-content: space-between; } 
+}
+
+.left-controls, .right-controls { 
+  display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; 
+}
+
+.control-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.action-btn {
+  width: auto; padding: 8px 20px; font-size: 15px; font-weight: bold; 
+  border-radius: 4px; border: 1px solid #ccc; 
+  background-color: white; color: #333; white-space: nowrap;
+}
+.action-btn:hover { background-color: #f8f9fa; }
+
+.action-btn.gray { background-color: #888; color: white; border: none; }
+.action-btn.gray:hover { background-color: #777; }
+
+.sub-actions {
+  font-size: 11px;
+  color: #555;
+  margin-top: 6px;
+  padding-left: 4px;
+  display: flex;
+  justify-content: flex-start;
+  gap: 10px;
+}
+
+.text-link {
+  cursor: pointer;
+  text-decoration: underline;
+}
+.text-link.danger {
+  color: #ff4d4f;
+}
+
+.mode-tag {
+  margin-right: 10px; 
+  font-size: 15px; 
+  font-weight: bold; 
+  color: #e74c3c; 
+  margin-top: 8px; 
+  display: inline-block;
+}
+
+
+/* =========================================
+   5. 드롭박스 (Select Box) 디자인
+   ========================================= */
+.left-controls select {
+  height: 40px;             
+  padding: 0 10px;          
+  font-size: 16px;          
+  border: 1px solid #333;   
+  border-radius: 8px;       
+  background-color: white;  
+  color: #333;
+  -webkit-appearance: none; 
+  -moz-appearance: none;
+  appearance: none;
+  min-width: 140px;         
+}
+
+.left-controls select.not-selected,
+.left-controls select option[value="공연 선택"],
+.left-controls select option[value="회차 선택"],
+.left-controls select select option:first-child {
+  color: #888;
+  border-color: #ccc;
+}
+
+.left-controls select.selected {
+  color: #000;
+  border-color: #333;
+  font-weight: bold; 
+}
+
+
+/* =========================================
+   6. 무대 및 좌석 영역
+   ========================================= */
+.stage-label {
+  background-color: #eee; 
+  padding: 30px 0; 
+  font-size: 30px; 
+  font-weight: bold; 
+  border-radius: 8px; 
+  margin: 20px 0; 
+  border: 1px solid #ccc;
+  letter-spacing: 10px; 
+}
+
+.entrance-label {
+  background-color: #eee; padding: 15px; font-size: 18px; 
+  font-weight: bold; border-radius: 8px; margin: 20px 0; border: 1px solid #ccc;
+  clear: both; position: relative; z-index: 10;
+}
+
+.status-bar { 
+  background-color: transparent; border: none; 
+  color: #666; padding: 10px; 
+  text-align: center; font-weight: bold; font-size: 12px; margin-top: 5px; margin-bottom: 10px;
+}
+
+.seat-area { width: 100%; display: flex; justify-content: center; margin: 30px 0; }
+.grid-wrapper { display: grid; gap: 6px; width: 100%; }
+
+.seat {
+  width: 100%; aspect-ratio: 1/1; padding: 0; 
+  font-size: clamp(10px, 2.5vw, 16px); font-weight: bold; 
+  border: 1px solid #bbb; border-radius: 6px; cursor: pointer; 
+  display: flex; 
+  flex-direction: column; 
+  justify-content: center; 
+  align-items: center; 
+  touch-action: manipulation;
+  min-width: 28px; min-height: 28px;
+  transition: transform 0.1s ease-out;
+  line-height: 1.1; 
+}
+
+.seat-sub-label {
+  font-size: 0.6em; 
+  font-weight: normal;
+  opacity: 0.7;     
+  margin-top: 2px;  
+}
+
+.state-0 { background-color: white; color: black; } 
+.state-1 { background-color: #546E7A; color: white; border: none; } 
+.state-2 { background-color: #DEE2E6; color: #ADB5BD; border: none; font-size: clamp(12px, 3vw, 20px); } 
+
+.seat.pressing {
+  transform: scale(0.85); 
+  opacity: 0.8;
+}
+
+.aisle {
+  display: flex; justify-content: center; align-items: center; 
+  font-weight: bold; color: #999; background-color: #f9f9f9; font-size: 12px;
+}
+
+
+/* =========================================
+   7. 모바일 전용
+   ========================================= */
+@media (max-width: 768px) {
+  .app-container {
+    padding: 10px;
+    min-width: 320px; 
   }
   
-  /* [신규] 타이틀과 버전을 묶어주는 래퍼 */
-  .title-wrapper {
-    position: relative; 
-    display: inline-block; 
-    margin-bottom: 45px;
-  }
-  
-  .title { 
-    font-size: clamp(2rem, 5vw, 3rem); 
-    margin: 0; 
-  }
-  
-  /* [신규] 버전 텍스트 둥둥 띄우기 */
-  .version-tag {
-    position: absolute; 
-    top: 12px; 
-    right: -80px; 
-    font-size: 20px; 
-    color: #888; 
-    font-weight: 500;
-  }
-  
-  .button-group { 
-    display: flex; 
-    flex-direction: column; 
-    gap: 15px; 
-    align-items: center; 
-    width: 100%; 
-    max-width: 300px;
-  }
-  
-  .big-btn {
-    width: 100%; max-width: 320px;
-    height: 60px; font-size: 18px; 
-    border: 1px solid #ccc; border-radius: 8px; cursor: pointer;
-    background-color: white; 
-    color: #333;
-    transition: background-color 0.2s;
-  }
-  
-  .big-btn:hover { background-color: #f1f3f5; }
-  
-  
-  /* =========================================
-     3. 등록 화면 (Register)
-     ========================================= */
-  .register-screen {
-    background-color: #f8f9fa;
-    min-height: 100vh;
-    padding: 20px;
-  }
-  
-  .page-title {
-    text-align: center;
-    margin-bottom: 30px;
-    font-size: 24px;
-  }
-  
+  /* [추가] 모바일 기기 화면에 맞춘 등록 화면 박스 여백 조절 */
   .register-card {
-    background-color: #fff;
-    border: 1px solid #ddd;
-    border-radius: 12px;
-    padding: 40px 30px;
-    width: 100%; 
-    max-width: 500px;
-    margin: 0 auto;
+    padding: 25px 15px; 
   }
   
-  .form-group {
-    margin-bottom: 25px;
-  }
-  
-  .form-group label {
-    display: block;
-    font-weight: bold;
-    margin-bottom: 8px;
-    text-align: left;
-    font-size: 15px;
-  }
-  
-  .form-group input, 
-  .form-group select {
-    width: 100%;
-    height: 45px;
-    padding: 0 15px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    font-size: 16px;
-    box-sizing: border-box;
-  }
-  
-  .form-hint {
-    font-size: 12px;
-    color: #888;
-    text-align: center;
-    margin-bottom: 30px;
-  }
-  
+  /* [추가] 모바일에서는 저장/취소 버튼을 위아래로 쌓아 터치하기 편하게 변경 */
   .form-buttons {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-  }
-  
-  .form-buttons button {
-    padding: 10px 30px;
-    background-color: #fff;
-    border: 1px solid #999;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 16px;
-    font-weight: 500;
-    transition: background-color 0.2s;
-  }
-  
-  .form-buttons button:hover {
-    background-color: #f0f0f0;
-  }
-  
-  
-  /* =========================================
-     4. 상단 컨트롤 바 (Control Bar) & 기능 버튼
-     ========================================= */
-  .control-bar { 
-    display: flex; flex-wrap: wrap; gap: 15px; 
-    margin-bottom: 30px; justify-content: center; align-items: flex-start;
-  }
-  
-  @media (min-width: 768px) { 
-    .control-bar { justify-content: space-between; } 
-  }
-  
-  .left-controls, .right-controls { 
-    display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; 
-  }
-  
-  /* [신규] 드롭박스와 하단 버튼을 세로로 묶는 영역 */
-  .control-column {
-    display: flex;
     flex-direction: column;
-  }
-  
-  .action-btn {
-    width: auto; padding: 8px 20px; font-size: 15px; font-weight: bold; 
-    cursor: pointer; border-radius: 4px; border: 1px solid #ccc; 
-    background-color: white; color: #333; white-space: nowrap;
-  }
-  .action-btn:hover { background-color: #f8f9fa; }
-  
-  /* [신규] 로그아웃 등 짙은 회색 버튼 */
-  .action-btn.gray { background-color: #888; color: white; border: none; }
-  .action-btn.gray:hover { background-color: #777; }
-  
-  /* [신규] 공연관리 모드 하단에 붙는 텍스트 링크 그룹 */
-  .sub-actions {
-    font-size: 11px;
-    color: #555;
-    margin-top: 6px;
-    padding-left: 4px;
-    display: flex;
-    justify-content: flex-start;
     gap: 10px;
   }
   
-  /* [신규] 텍스트 버튼 스타일 */
-  .text-link {
-    cursor: pointer;
-    text-decoration: underline;
+  .form-buttons button {
+    width: 100%; /* 버튼이 좌우로 꽉 차도록 확장 */
+    padding: 15px 0; /* 세로 터치 영역 확장 */
   }
-  .text-link.danger {
-    color: #ff4d4f;
+
+  .grid-wrapper {
+    gap: 3px; 
+    width: 100%; 
   }
-  
-  /* [신규] 좌석선택모드 강조 텍스트 */
-  .mode-tag {
-    margin-right: 10px; 
-    font-size: 15px; 
-    font-weight: bold; 
-    color: #e74c3c; 
-    margin-top: 8px; 
-    display: inline-block;
-  }
-  
-  
-  /* =========================================
-     5. 드롭박스 (Select Box) 디자인
-     ========================================= */
-  .left-controls select {
-    height: 40px;             
-    padding: 0 10px;          
-    font-size: 16px;          
-    border: 1px solid #333;   
-    border-radius: 8px;       
-    background-color: white;  
-    -webkit-appearance: none; 
-    -moz-appearance: none;
-    appearance: none;
-    cursor: pointer;
-    min-width: 140px;         
-  }
-  
-  .left-controls select.not-selected,
-  .left-controls select option[value="공연 선택"],
-  .left-controls select option[value="회차 선택"],
-  .left-controls select option:first-child {
-    color: #888;
-    border-color: #ccc;
-  }
-  
-  .left-controls select.selected {
-    color: #000;
-    border-color: #333;
-    font-weight: bold; 
-    background-color: #ffffff;
-  }
-  
-  .left-controls select option {
-    font-weight: normal; 
-    color: #333;         
-    background-color: white; 
-  }
-  
-  
-  /* =========================================
-     6. 무대 및 좌석 영역
-     ========================================= */
-  .stage-label {
-    background-color: #eee; 
-    padding: 30px 0; 
-    font-size: 30px; 
-    font-weight: bold; 
-    border-radius: 8px; 
-    margin: 20px 0; 
-    border: 1px solid #ccc;
-    letter-spacing: 10px; 
-  }
-  
-  .entrance-label {
-    background-color: #eee; padding: 15px; font-size: 18px; 
-    font-weight: bold; border-radius: 8px; margin: 20px 0; border: 1px solid #ccc;
-    clear: both; position: relative; z-index: 10;
-  }
-  
-  .status-bar { 
-    background-color: transparent; border: none; 
-    color: #666; padding: 10px; 
-    text-align: center; font-weight: bold; font-size: 12px; margin-top: 5px; margin-bottom: 10px;
-  }
-  
-  .seat-area { width: 100%; display: flex; justify-content: center; margin: 30px 0; }
-  .grid-wrapper { display: grid; gap: 6px; width: 100%; }
-  
   .seat {
-    width: 100%; aspect-ratio: 1/1; padding: 0; 
-    font-size: clamp(10px, 2.5vw, 16px); font-weight: bold; 
-    border: 1px solid #bbb; border-radius: 6px; cursor: pointer; 
-    display: flex; 
-    flex-direction: column; 
-    justify-content: center; 
-    align-items: center; 
-    touch-action: manipulation;
-    min-width: 28px; min-height: 28px;
-    transition: transform 0.1s ease-out;
-    line-height: 1.1; 
+    min-width: 0; 
+    width: 100%;  
+    padding: 0;   
+    font-size: 10px; 
+    aspect-ratio: 1/1; 
   }
-  
-  .seat-sub-label {
-    font-size: 0.6em; 
-    font-weight: normal;
-    opacity: 0.7;     
-    margin-top: 2px;  
-  }
-  
-  .state-0 { background-color: white; color: black; } 
-  .state-1 { background-color: #546E7A; color: white; border: none; } 
-  .state-2 { background-color: #DEE2E6; color: #ADB5BD; border: none; font-size: clamp(12px, 3vw, 20px); } 
-  
-  .seat.pressing {
-    transform: scale(0.85); 
-    opacity: 0.8;
-  }
-  
   .aisle {
-    display: flex; justify-content: center; align-items: center; 
-    font-weight: bold; color: #999; background-color: #f9f9f9; font-size: 12px;
+    font-size: 10px;
   }
-  
-  
-  /* =========================================
-     7. 모바일 전용
-     ========================================= */
-  @media (max-width: 768px) {
-    .app-container {
-      padding: 10px;
-      min-width: 320px; 
-    }
-    .grid-wrapper {
-      gap: 3px; 
-      width: 100%; 
-    }
-    .seat {
-      min-width: 0; 
-      width: 100%;  
-      padding: 0;   
-      font-size: 10px; 
-      aspect-ratio: 1/1; 
-    }
-    .aisle {
-      font-size: 10px;
-    }
-    .control-bar {
-      justify-content: center;
-    }
-    .left-controls, .right-controls {
-      width: 100%;
-      justify-content: space-between;
-    }
-    .left-controls select {
-      width: 48%; 
-      min-width: 0;
-    }
+  .control-bar {
+    justify-content: center;
   }
+  /* [수정] 모바일에서는 컨트롤 박스들이 위아래로 쌓이도록 변경 */
+  .left-controls, .right-controls {
+    width: 100%;
+    flex-direction: column; /* 세로 방향으로 정렬 */
+    gap: 12px; /* 요소들 사이의 간격 추가 */
+  }
+
+  /* [수정] 컨트롤 컬럼이 화면 너비를 꽉 채우도록 설정 */
+  .control-column {
+    width: 100%;
+  }
+
+  /* [문제 해결] 드롭박스의 너비를 48%에서 100%로 넓혀서 글자가 쾌적하게 보이도록 수정 */
+  .left-controls select {
+    width: 100%; 
+    font-size: 15px; /* 모바일 화면에 맞게 폰트 크기 살짝 최적화 */
+  }
+}
