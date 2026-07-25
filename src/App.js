@@ -17,11 +17,11 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
-// --- [사용자님 아이디어 적용: 48석 레이아웃 기반 가장자리 숨김 처리] ---
+// --- [필요 없는 56/60석 삭제 및 44석 양 끝 블락 로직 추가] ---
 const SEAT_CONFIGS = {
   "40석(1줄 5석)": { rows: ["가", "나", "다", "라"], cols: 10, split: 5 },
-  "44석(상수6석)": { rows: ["가", "나", "다", "라"], cols: 12, split: 6, hideRightEnd: true },
-  "44석(하수6석)": { rows: ["가", "나", "다", "라"], cols: 12, split: 6, hideLeftEnd: true },
+  "44석(상수6석)": { rows: ["가", "나", "다", "라"], cols: 12, split: 6, blockRightEnd: true },
+  "44석(하수6석)": { rows: ["가", "나", "다", "라"], cols: 12, split: 6, blockLeftEnd: true },
   "48석(1줄 6석)": { rows: ["가", "나", "다", "라"], cols: 12, split: 6 },
 };
 
@@ -290,8 +290,15 @@ function App() {
       const rIdx = Math.floor(idx / cfg.cols);
       const cIdx = idx % cfg.cols;
       
-      let seatNum = cIdx + 1;
-      if (cfg.hideLeftEnd) seatNum = cIdx;
+      // 강제 블락된 좌석은 아예 클릭이 안 먹히도록 리턴
+      if (cfg.blockLeftEnd && cIdx === 0) return;
+      if (cfg.blockRightEnd && cIdx === cfg.cols - 1) return;
+
+      // 사용자님의 원본 로직 그대로 복구 + 상수 6석(우측 가장자리 블락) 시 번호 1 당기기
+      let seatNum = cfg.cols - cIdx;
+      if (cfg.blockRightEnd) {
+        seatNum -= 1;
+      }
       const seatName = `${cfg.rows[rIdx]}${seatNum}`;
 
       if (isBlockAction) {
@@ -319,11 +326,12 @@ function App() {
       set(ref(database, `performances/${perfName}/rounds/${roundName}/status`), newStatus);
     };
 
+    // 하단 정보창 계산 (강제 블락된 가장자리는 총 좌석수에서 제외)
     const validSeats = safeStatus.filter((_, idx) => {
       if (!cfg) return false;
       const cIdx = idx % cfg.cols;
-      if (cfg.hideLeftEnd && cIdx === 0) return false;
-      if (cfg.hideRightEnd && cIdx === cfg.cols - 1) return false;
+      if (cfg.blockLeftEnd && cIdx === 0) return false;
+      if (cfg.blockRightEnd && cIdx === cfg.cols - 1) return false;
       return true;
     });
 
@@ -348,10 +356,10 @@ function App() {
               <select value={roundName} onChange={e => setRoundName(e.target.value)}>
                 <option>회차 선택</option>
                 {roundList.map(r => {
-                  // [수정된 부분] rStatus 변수를 깔끔하게 삭제했습니다!
+                  // Vercel 에러 주범이었던 사용 안 하는 변수 제거 및 44/48석 정확한 카운트 적용
                   const currentCfgType = currentPerf.rounds[r]?.type || "40석(1줄 5석)";
                   const currentCfg = SEAT_CONFIGS[currentCfgType];
-                  const seatCount = currentCfg ? (currentCfg.rows.length * (currentCfg.cols - (currentCfg.hideLeftEnd || currentCfg.hideRightEnd ? 1 : 0))) : 0;
+                  const seatCount = currentCfg ? (currentCfg.rows.length * (currentCfg.cols - (currentCfg.blockLeftEnd || currentCfg.blockRightEnd ? 1 : 0))) : 0;
                   return <option key={r} value={r}>{r} ({seatCount}석)</option>;
                 })}
               </select>
@@ -406,30 +414,33 @@ function App() {
               {cfg.rows.map((rowLabel, rIdx) => (
                 [...Array(cfg.cols)].map((_, cIdx) => {
                   const realIdx = (rIdx * cfg.cols) + cIdx;
-                  const gridRow = rIdx + 1;
-                  const gridColumn = cIdx + 1 + (cIdx >= (cfg.cols - cfg.split) ? 1 : 0);
-
-                  const isHidden = (cfg.hideLeftEnd && cIdx === 0) || (cfg.hideRightEnd && cIdx === cfg.cols - 1);
-                  if (isHidden) {
-                    return <div key={realIdx} style={{ gridRow: gridRow, gridColumn: gridColumn, visibility: 'hidden', pointerEvents: 'none' }}></div>;
-                  }
-
-                  const isDone = safeStatus[realIdx] === 1;
-                  const isBlocked = safeStatus[realIdx] === 2;
                   
-                  let seatNum = cIdx + 1;
-                  if (cfg.hideLeftEnd) seatNum = cIdx;
+                  // 가장자리 강제 블락 여부 판단
+                  const isForceBlocked = (cfg.blockLeftEnd && cIdx === 0) || (cfg.blockRightEnd && cIdx === cfg.cols - 1);
+                  
+                  // 강제 블락 자리는 DB 값 무시하고 강제로 2(X 표시) 상태로 설정
+                  const displayStatus = isForceBlocked ? 2 : (safeStatus[realIdx] || 0);
+                  const isDone = displayStatus === 1;
+                  const isBlocked = displayStatus === 2;
+
+                  // 사용자님의 원본 로직 그대로 복구
+                  let seatNum = cfg.cols - cIdx;
+                  if (cfg.blockRightEnd) {
+                    seatNum -= 1;
+                  }
                   const seatName = `${rowLabel}${seatNum}`;
 
                   return (
                     <SeatButton 
                       key={realIdx} 
-                      status={safeStatus[realIdx] || 0} 
+                      status={displayStatus} 
+                      // 블락된 곳은 번호 없이 X 기호만 출력
                       label={isDone ? "완료" : (isBlocked ? "X" : seatName)} 
-                      originalLabel={seatName} 
-                      style={{ gridRow: gridRow, gridColumn: gridColumn }} 
-                      onClick={() => processSeatAction(realIdx, false)} 
-                      onLongPress={() => processSeatAction(realIdx, true)} 
+                      originalLabel={isForceBlocked ? "" : seatName} 
+                      style={{ gridRow: rIdx + 1, gridColumn: cIdx + 1 + (cIdx >= (cfg.cols - cfg.split) ? 1 : 0) }} 
+                      // 블락된 자리는 클릭 방지
+                      onClick={isForceBlocked ? () => {} : () => processSeatAction(realIdx, false)} 
+                      onLongPress={isForceBlocked ? () => {} : () => processSeatAction(realIdx, true)} 
                     />
                   );
                 })
@@ -456,7 +467,7 @@ function App() {
   }
 }
 
-// --- 4. 좌석(SeatButton) 컴포넌트 ---
+// --- 4. 좌석(SeatButton) 컴포넌트 로직 ---
 const SeatButton = ({ status, label, originalLabel, style, onClick, onLongPress }) => {
   const [isPressing, setIsPressing] = useState(false);
   const timerRef = useRef(null);
