@@ -18,8 +18,6 @@ const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
 // --- [사용자님 아이디어 적용: 48석 레이아웃 기반 가장자리 숨김 처리] ---
-// hideLeftEnd: 첫 번째 자리(하수 끝자리)를 숨김
-// hideRightEnd: 마지막 자리(상수 끝자리)를 숨김
 const SEAT_CONFIGS = {
   "40석(1줄 5석)": { rows: ["가", "나", "다", "라"], cols: 10, split: 5 },
   "44석(상수6석)": { rows: ["가", "나", "다", "라"], cols: 12, split: 6, hideRightEnd: true },
@@ -292,7 +290,6 @@ function App() {
       const rIdx = Math.floor(idx / cfg.cols);
       const cIdx = idx % cfg.cols;
       
-      // 하수 6석일 때 첫 자리가 숨겨지면, 번호를 하나 앞당겨 1번부터 시작하도록 계산
       let seatNum = cIdx + 1;
       if (cfg.hideLeftEnd) seatNum = cIdx;
       const seatName = `${cfg.rows[rIdx]}${seatNum}`;
@@ -322,7 +319,6 @@ function App() {
       set(ref(database, `performances/${perfName}/rounds/${roundName}/status`), newStatus);
     };
 
-    // 하단 정보창 계산 (숨겨진 좌석은 카운트에서 제외)
     const validSeats = safeStatus.filter((_, idx) => {
       if (!cfg) return false;
       const cIdx = idx % cfg.cols;
@@ -352,8 +348,7 @@ function App() {
               <select value={roundName} onChange={e => setRoundName(e.target.value)}>
                 <option>회차 선택</option>
                 {roundList.map(r => {
-                  const rStatus = currentPerf.rounds[r]?.status || [];
-                  // 총 좌석수를 48석이 아닌 44석으로 올바르게 표시하기 위한 계산
+                  // [수정된 부분] rStatus 변수를 깔끔하게 삭제했습니다!
                   const currentCfgType = currentPerf.rounds[r]?.type || "40석(1줄 5석)";
                   const currentCfg = SEAT_CONFIGS[currentCfgType];
                   const seatCount = currentCfg ? (currentCfg.rows.length * (currentCfg.cols - (currentCfg.hideLeftEnd || currentCfg.hideRightEnd ? 1 : 0))) : 0;
@@ -414,7 +409,6 @@ function App() {
                   const gridRow = rIdx + 1;
                   const gridColumn = cIdx + 1 + (cIdx >= (cfg.cols - cfg.split) ? 1 : 0);
 
-                  // [핵심] 44석 선택 시 가장자리 좌석을 투명하게 숨겨서 틀을 유지하는 부분
                   const isHidden = (cfg.hideLeftEnd && cIdx === 0) || (cfg.hideRightEnd && cIdx === cfg.cols - 1);
                   if (isHidden) {
                     return <div key={realIdx} style={{ gridRow: gridRow, gridColumn: gridColumn, visibility: 'hidden', pointerEvents: 'none' }}></div>;
@@ -423,7 +417,6 @@ function App() {
                   const isDone = safeStatus[realIdx] === 1;
                   const isBlocked = safeStatus[realIdx] === 2;
                   
-                  // 하수 6석일 때 첫 자리가 숨겨지면, 번호를 하나 앞당겨 1번부터 시작하도록 계산
                   let seatNum = cIdx + 1;
                   if (cfg.hideLeftEnd) seatNum = cIdx;
                   const seatName = `${rowLabel}${seatNum}`;
