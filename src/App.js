@@ -225,15 +225,11 @@ function App() {
       }
     };
 
-    // [신규 기능 추가] 현재 선택된 회차의 좌석 데이터를 0(초기값)으로 덮어쓰는 함수입니다.
     const resetCurrentRound = () => {
       if (window.confirm(`[${roundName}]의 모든 좌석 예매 및 비활성화 내역을 빈 좌석으로 초기화하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`)) {
         const input = window.prompt("초기화를 위해 관리자 비밀번호 4자리를 입력하세요.");
         if (input === currentPerf?.adminPassword || input === "----") {
-          // 배열의 길이를 가져와 모두 0으로 채웁니다.
           const newStatus = Array(cfg.rows.length * cfg.cols).fill(0);
-          
-          // Firebase의 해당 회차 status 부분만 새로운 배열로 덮어씌웁니다.
           set(ref(database, `performances/${perfName}/rounds/${roundName}/status`), newStatus);
           alert("모든 좌석이 성공적으로 초기화되었습니다.");
         } else {
@@ -352,9 +348,9 @@ function App() {
                   <span className="text-link" onClick={addNewRound}>회차 추가</span>
                   {roundName !== "선택" && (
                     <>
-                      {/* [신규 기능 추가] 회차 초기화 버튼을 UI에 추가했습니다. */}
-                      <span className="text-link danger" onClick={resetCurrentRound}>회차 초기화</span>
+                      {/* [핵심 수정] 버튼 순서를 원하시는 대로 변경했습니다: 회차삭제 -> 회차초기화 */}
                       <span className="text-link danger" onClick={deleteCurrentRound}>회차 삭제</span>
+                      <span className="text-link danger" onClick={resetCurrentRound}>회차 초기화</span>
                     </>
                   )}
                 </div>
