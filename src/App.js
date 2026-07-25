@@ -17,11 +17,12 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
+// --- [수정된 좌석 배치 설정] ---
 const SEAT_CONFIGS = {
   "40석(1줄 5석)": { rows: ["가", "나", "다", "라"], cols: 10, split: 5 },
+  "44석(상수 6석)": { rows: ["가", "나", "다", "라"], cols: 11, split: 6 },
+  "44석(하수 6석)": { rows: ["가", "나", "다", "라"], cols: 11, split: 5 },
   "48석(1줄 6석)": { rows: ["가", "나", "다", "라"], cols: 12, split: 6 },
-  "56석(1줄 7석)": { rows: ["가", "나", "다", "라"], cols: 14, split: 7 },
-  "60석(1줄 6석+보조석추가)": { rows: ["보조", "가", "나", "다", "라"], cols: 12, split: 6 },
 };
 
 function App() {
@@ -348,7 +349,6 @@ function App() {
                   <span className="text-link" onClick={addNewRound}>회차 추가</span>
                   {roundName !== "선택" && (
                     <>
-                      {/* [핵심 수정] 버튼 순서를 원하시는 대로 변경했습니다: 회차삭제 -> 회차초기화 */}
                       <span className="text-link danger" onClick={deleteCurrentRound}>회차 삭제</span>
                       <span className="text-link danger" onClick={resetCurrentRound}>회차 초기화</span>
                     </>
@@ -432,7 +432,7 @@ function App() {
   }
 }
 
-// --- 4. 좌석(SeatButton) 컴포넌트 로직 전면 개선 ---
+// --- 4. 좌석(SeatButton) 컴포넌트 ---
 const SeatButton = ({ status, label, originalLabel, style, onClick, onLongPress }) => {
   const [isPressing, setIsPressing] = useState(false);
   const timerRef = useRef(null);
