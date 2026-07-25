@@ -17,11 +17,13 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
-// --- [수정된 좌석 배치 설정] ---
+// --- [사용자님 아이디어 적용: 48석 레이아웃 기반 가장자리 숨김 처리] ---
+// hideLeftEnd: 첫 번째 자리(하수 끝자리)를 숨김
+// hideRightEnd: 마지막 자리(상수 끝자리)를 숨김
 const SEAT_CONFIGS = {
   "40석(1줄 5석)": { rows: ["가", "나", "다", "라"], cols: 10, split: 5 },
-  "44석(상수 6석)": { rows: ["가", "나", "다", "라"], cols: 11, split: 6 },
-  "44석(하수 6석)": { rows: ["가", "나", "다", "라"], cols: 11, split: 5 },
+  "44석(상수6석)": { rows: ["가", "나", "다", "라"], cols: 12, split: 6, hideRightEnd: true },
+  "44석(하수6석)": { rows: ["가", "나", "다", "라"], cols: 12, split: 6, hideLeftEnd: true },
   "48석(1줄 6석)": { rows: ["가", "나", "다", "라"], cols: 12, split: 6 },
 };
 
@@ -76,7 +78,6 @@ function App() {
     }
   };
 
-  // --- 1. 메인 화면 ---
   if (menu === "main") {
     return (
       <div className="app-container main-menu">
@@ -107,7 +108,6 @@ function App() {
     );
   }
 
-  // --- 2. 신규 공연 등록 화면 ---
   if (menu === "register") {
     const handleRegister = (e) => {
       e.preventDefault();
@@ -167,7 +167,6 @@ function App() {
     );
   }
 
-  // --- 3. 좌석 확인/관리 화면 ---
   if (menu === "booking") {
     const perfList = Object.keys(db).sort((a, b) => {
       const timeA = db[a]?.createdAt || 0;
@@ -292,7 +291,11 @@ function App() {
       const currentSeatStatus = newStatus[idx] || 0;
       const rIdx = Math.floor(idx / cfg.cols);
       const cIdx = idx % cfg.cols;
-      const seatName = `${cfg.rows[rIdx]}${cfg.cols - cIdx}`;
+      
+      // 하수 6석일 때 첫 자리가 숨겨지면, 번호를 하나 앞당겨 1번부터 시작하도록 계산
+      let seatNum = cIdx + 1;
+      if (cfg.hideLeftEnd) seatNum = cIdx;
+      const seatName = `${cfg.rows[rIdx]}${seatNum}`;
 
       if (isBlockAction) {
         if (currentSeatStatus === 2) {
@@ -319,6 +322,15 @@ function App() {
       set(ref(database, `performances/${perfName}/rounds/${roundName}/status`), newStatus);
     };
 
+    // 하단 정보창 계산 (숨겨진 좌석은 카운트에서 제외)
+    const validSeats = safeStatus.filter((_, idx) => {
+      if (!cfg) return false;
+      const cIdx = idx % cfg.cols;
+      if (cfg.hideLeftEnd && cIdx === 0) return false;
+      if (cfg.hideRightEnd && cIdx === cfg.cols - 1) return false;
+      return true;
+    });
+
     return (
       <div className="app-container booking-screen">
         <header className="control-bar">
@@ -341,7 +353,11 @@ function App() {
                 <option>회차 선택</option>
                 {roundList.map(r => {
                   const rStatus = currentPerf.rounds[r]?.status || [];
-                  return <option key={r} value={r}>{r} ({rStatus.length || 0}석)</option>;
+                  // 총 좌석수를 48석이 아닌 44석으로 올바르게 표시하기 위한 계산
+                  const currentCfgType = currentPerf.rounds[r]?.type || "40석(1줄 5석)";
+                  const currentCfg = SEAT_CONFIGS[currentCfgType];
+                  const seatCount = currentCfg ? (currentCfg.rows.length * (currentCfg.cols - (currentCfg.hideLeftEnd || currentCfg.hideRightEnd ? 1 : 0))) : 0;
+                  return <option key={r} value={r}>{r} ({seatCount}석)</option>;
                 })}
               </select>
               {adminMode === "perf" && perfName !== "선택" && (
@@ -395,15 +411,30 @@ function App() {
               {cfg.rows.map((rowLabel, rIdx) => (
                 [...Array(cfg.cols)].map((_, cIdx) => {
                   const realIdx = (rIdx * cfg.cols) + cIdx;
+                  const gridRow = rIdx + 1;
+                  const gridColumn = cIdx + 1 + (cIdx >= (cfg.cols - cfg.split) ? 1 : 0);
+
+                  // [핵심] 44석 선택 시 가장자리 좌석을 투명하게 숨겨서 틀을 유지하는 부분
+                  const isHidden = (cfg.hideLeftEnd && cIdx === 0) || (cfg.hideRightEnd && cIdx === cfg.cols - 1);
+                  if (isHidden) {
+                    return <div key={realIdx} style={{ gridRow: gridRow, gridColumn: gridColumn, visibility: 'hidden', pointerEvents: 'none' }}></div>;
+                  }
+
                   const isDone = safeStatus[realIdx] === 1;
                   const isBlocked = safeStatus[realIdx] === 2;
+                  
+                  // 하수 6석일 때 첫 자리가 숨겨지면, 번호를 하나 앞당겨 1번부터 시작하도록 계산
+                  let seatNum = cIdx + 1;
+                  if (cfg.hideLeftEnd) seatNum = cIdx;
+                  const seatName = `${rowLabel}${seatNum}`;
+
                   return (
                     <SeatButton 
                       key={realIdx} 
                       status={safeStatus[realIdx] || 0} 
-                      label={isDone ? "완료" : (isBlocked ? "X" : `${rowLabel}${cfg.cols - cIdx}`)} 
-                      originalLabel={`${rowLabel}${cfg.cols - cIdx}`} 
-                      style={{ gridRow: rIdx + 1, gridColumn: cIdx + 1 + (cIdx >= (cfg.cols - cfg.split) ? 1 : 0) }} 
+                      label={isDone ? "완료" : (isBlocked ? "X" : seatName)} 
+                      originalLabel={seatName} 
+                      style={{ gridRow: gridRow, gridColumn: gridColumn }} 
                       onClick={() => processSeatAction(realIdx, false)} 
                       onLongPress={() => processSeatAction(realIdx, true)} 
                     />
@@ -417,7 +448,7 @@ function App() {
         {currentData && (
           <div className="bottom-info-area" style={{ marginTop: '20px' }}>
             <div className="status-bar">
-              총 {safeStatus.length}석 | 완료 {safeStatus.filter(s=>s===1).length}석 | 불가 {safeStatus.filter(s=>s===2).length}석 | 잔여 {safeStatus.filter(s=>s===0).length}석
+              총 {validSeats.length}석 | 완료 {validSeats.filter(s=>s===1).length}석 | 불가 {validSeats.filter(s=>s===2).length}석 | 잔여 {validSeats.filter(s=>s===0).length}석
             </div>
             
             {adminMode === "perf" && (
