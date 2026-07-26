@@ -20,8 +20,8 @@ const database = getDatabase(app);
 // --- [필요 없는 56/60석 삭제 및 44석 양 끝 블락 로직 추가] ---
 const SEAT_CONFIGS = {
   "40석(1줄 5석)": { rows: ["가", "나", "다", "라"], cols: 10, split: 5 },
-  "44석(상수6석)": { rows: ["가", "나", "다", "라"], cols: 12, split: 6, blockRightEnd: true },
-  "44석(하수6석)": { rows: ["가", "나", "다", "라"], cols: 12, split: 6, blockLeftEnd: true },
+  "44석(상수6석)": { rows: ["가", "나", "다", "라"], cols: 12, split: 6, blockLeftEnd: true },
+  "44석(하수6석)": { rows: ["가", "나", "다", "라"], cols: 12, split: 6, blockRightEnd: true },
   "48석(1줄 6석)": { rows: ["가", "나", "다", "라"], cols: 12, split: 6 },
 };
 
@@ -83,8 +83,8 @@ function App() {
           <div className="notice-title">📢 260721 업데이트 안내 (v2.0)</div>
           <ul className="notice-list">
             <li>비밀번호 설정 추가 되었습니다.</li>
-            <li>좌석관리 : 좌석선택 모드</li>
-            <li>공연관리 : 공연명, 좌석수 등 수정 모드</li>
+            <li>좌석선택 : 좌석선택 모드</li>
+            <li>공연수정 : 공연명, 좌석수 등 수정 모드</li>
           </ul>
           <div className="notice-desc">불편사항 발생 시 황수연에게 알려주세요.</div>
         </div>
@@ -279,7 +279,7 @@ function App() {
 
     const processSeatAction = (idx, isBlockAction) => {
       if (adminMode !== "seat") {
-        return alert("좌석을 수정하려면 [🔒 좌석관리]로 로그인해주세요.");
+        return alert("좌석을 선택하려면 [🔒 좌석선택]로 로그인해주세요.");
       }
       if (!currentData) return;
       
@@ -380,8 +380,8 @@ function App() {
           <div className="right-controls">
             {adminMode === "none" && currentPerf && (
               <>
-                <button type="button" className="action-btn save" onClick={() => handleAdminLogin("seat", currentPerf)}>🔒 좌석관리</button>
-                <button type="button" className="action-btn save" onClick={() => handleAdminLogin("perf", currentPerf)}>🔒 공연관리</button>
+                <button type="button" className="action-btn save" onClick={() => handleAdminLogin("seat", currentPerf)}>🔒 좌석선택</button>
+                <button type="button" className="action-btn save" onClick={() => handleAdminLogin("perf", currentPerf)}>🔒 공연수정</button>
               </>
             )}
 
